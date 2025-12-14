@@ -99,12 +99,13 @@ export default function AddMealScreen() {
   };
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper edges={['left', 'right', 'bottom']}>
       <Stack.Screen
         options={{
           headerShown: true,
           title: 'Add Meal',
           headerBackTitle: ' ',
+          headerBackTitleVisible: false,
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
