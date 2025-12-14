@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Alert, Dimensions, Platform } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Alert, Dimensions, Platform, Modal, ScrollView } from 'react-native';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { useTheme } from '@/context/ThemeContext';
-import { CalendarDays, ChevronRight, Clock, Trash2 } from 'lucide-react-native';
+import { CalendarDays, ChevronRight, Clock, Trash2, Plus, Sparkles } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { getAllMeals, SavedMeal, deleteMeal } from '@/services/mealsDb';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -11,9 +11,13 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 const MOCK_MEAL: SavedMeal = {
   id: 'mock-history-1',
   imageUri: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60',
+  photoUri: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60',
   createdAt: new Date().toISOString(),
+  dateTime: new Date().toISOString(),
+  name: 'Grilled Salmon Salad',
   dishName: 'Grilled Salmon Salad',
   ingredientsDescription: 'Fresh atlantic salmon, mixed greens, cherry tomatoes, cucumber, avocado',
+  notes: 'Heart-healthy omega 3s and plenty of greens.',
   nutritionSummary: 'High in protein and healthy omega-3 fatty acids. Low carbohydrate content.',
   caloriesEstimate: 450,
   proteinGrams: 35,
@@ -22,6 +26,7 @@ const MOCK_MEAL: SavedMeal = {
   fiberGrams: 6,
   goodPoints: ['Rich in Omega-3', 'High Protein'],
   badPoints: [],
+  source: 'scanned',
 };
 
 export default function HistoryScreen() {
@@ -29,6 +34,8 @@ export default function HistoryScreen() {
   const { colors } = useTheme();
   const [meals, setMeals] = useState<SavedMeal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMealId, setSelectedMealId] = useState<string | null>(null);
+  const [selectModalVisible, setSelectModalVisible] = useState(false);
 
   const [animationKey, setAnimationKey] = useState(0);
 
@@ -86,22 +93,28 @@ export default function HistoryScreen() {
 
   const renderItem = ({ item, index }: { item: SavedMeal; index: number }) => {
     const isMockMeal = item.id === 'mock-history-1';
-    
+    const thumbnail = item.photoUri || item.imageUri;
+    const mealName = item.name || item.dishName;
+    const mealDate = item.dateTime || item.createdAt;
+
     return (
       <Animated.View entering={FadeInDown.delay(index * 100).springify()}>
         <GlassCard style={styles.mealCard}>
-          <TouchableOpacity 
-            onPress={() => router.push(`/meal/${item.id}`)}
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedMealId(item.id);
+              router.push(`/meal/${item.id}`);
+            }}
             activeOpacity={0.8}
             style={styles.mealTouchable}
           >
-            <Image source={{ uri: item.imageUri }} style={[styles.thumbnail, { backgroundColor: colors.glassBackgroundStrong }]} />
+            <Image source={{ uri: thumbnail }} style={[styles.thumbnail, { backgroundColor: colors.glassBackgroundStrong }]} />
             <View style={styles.mealInfo}>
-              <Text style={[styles.dishName, { color: colors.text }]} numberOfLines={1}>{item.dishName}</Text>
+              <Text style={[styles.dishName, { color: colors.text }]} numberOfLines={1}>{mealName}</Text>
               <View style={styles.metaRow}>
                 <Clock size={12} color={colors.textSecondary} style={{ marginRight: 4 }} />
                 <Text style={[styles.dateText, { color: colors.textSecondary }]}>
-                  {new Date(item.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {new Date(mealDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </Text>
               </View>
               <Text style={[styles.calsText, { color: colors.tint }]}>{Math.round(item.caloriesEstimate)} kcal</Text>
@@ -126,17 +139,57 @@ export default function HistoryScreen() {
     );
   };
 
+  const handleStartAddMeal = () => {
+    router.push('/history/add');
+  };
+
+  const handleOpenAi = () => {
+    if (selectedMealId) {
+      router.push(`/meal-ai/${selectedMealId}`);
+      return;
+    }
+
+    if (meals.length === 0) {
+      Alert.alert('Select a meal first', 'Add or open a meal to start an AI chat.');
+      return;
+    }
+
+    setSelectModalVisible(true);
+  };
+
+  const handleSelectMealForAi = (mealId: string) => {
+    setSelectedMealId(mealId);
+    setSelectModalVisible(false);
+    router.push(`/meal-ai/${mealId}`);
+  };
+
   return (
     <ScreenWrapper>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Animated.Text 
+          <Animated.Text
             key={`title-${animationKey}`}
             entering={FadeInDown.duration(500).springify()} 
             style={[styles.title, { color: colors.text }]}
           >
             History
           </Animated.Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={handleOpenAi}
+              style={[styles.headerIconButton, { backgroundColor: colors.glassBackgroundStrong }]}
+              hitSlop={10}
+            >
+              <Sparkles color={colors.text} size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleStartAddMeal}
+              style={[styles.headerIconButton, { backgroundColor: colors.glassBackgroundStrong }]}
+              hitSlop={10}
+            >
+              <Plus color={colors.text} size={22} />
+            </TouchableOpacity>
+          </View>
         </View>
         
         {meals.length === 0 && !loading ? (
@@ -156,6 +209,43 @@ export default function HistoryScreen() {
           />
         )}
       </View>
+
+      <Modal visible={selectModalVisible} animationType="slide" transparent onRequestClose={() => setSelectModalVisible(false)}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay || 'rgba(0,0,0,0.5)' }]}> 
+          <View style={[styles.modalCard, { backgroundColor: colors.background, borderColor: colors.glassBorder }]}> 
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Select a meal</Text>
+            <ScrollView style={{ maxHeight: 320 }}>
+              {meals.map(meal => (
+                <TouchableOpacity
+                  key={meal.id}
+                  onPress={() => handleSelectMealForAi(meal.id)}
+                  style={[styles.modalRow, { borderBottomColor: colors.glassBorder }]}
+                >
+                  <View style={styles.modalRowLeft}>
+                    <Image
+                      source={{ uri: meal.photoUri || meal.imageUri }}
+                      style={[styles.modalThumb, { backgroundColor: colors.glassBackgroundStrong }]}
+                    />
+                    <View>
+                      <Text style={[styles.modalMealName, { color: colors.text }]} numberOfLines={1}>{meal.name || meal.dishName}</Text>
+                      <Text style={[styles.modalMealDate, { color: colors.textSecondary }]}>
+                        {new Date(meal.dateTime || meal.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </Text>
+                    </View>
+                  </View>
+                  <ChevronRight color={colors.textSecondary} size={18} />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              onPress={() => setSelectModalVisible(false)}
+              style={[styles.modalClose, { backgroundColor: colors.glassBackgroundStrong }]}
+            >
+              <Text style={{ color: colors.text }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScreenWrapper>
   );
 }
@@ -171,6 +261,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 20,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 32,
@@ -249,5 +351,54 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     marginTop: 8,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  modalRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  modalThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+  },
+  modalMealName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalMealDate: {
+    fontSize: 12,
+  },
+  modalClose: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
   },
 });
