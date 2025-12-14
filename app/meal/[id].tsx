@@ -457,7 +457,7 @@ export default function MealDetailScreen() {
                 <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Dish Name</Text>
                 <TextInput
                   style={[styles.textInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                  value={editedMeal?.dishName}
+                  value={editedMeal?.dishName || ''}
                   onChangeText={(text) => updateEditedField('dishName', text)}
                   placeholder="Enter dish name"
                   placeholderTextColor={colors.textMuted}
@@ -468,7 +468,7 @@ export default function MealDetailScreen() {
                 <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Ingredients</Text>
                 <TextInput
                   style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                  value={editedMeal?.ingredientsDescription}
+                  value={editedMeal?.ingredientsDescription || ''}
                   onChangeText={(text) => updateEditedField('ingredientsDescription', text)}
                   placeholder="Describe ingredients"
                   placeholderTextColor={colors.textMuted}
@@ -493,7 +493,7 @@ export default function MealDetailScreen() {
                 <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Nutrition Summary</Text>
                 <TextInput
                   style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                  value={editedMeal?.nutritionSummary}
+                  value={editedMeal?.nutritionSummary || ''}
                   onChangeText={(text) => updateEditedField('nutritionSummary', text)}
                   placeholder="Nutrition summary"
                   placeholderTextColor={colors.textMuted}
@@ -507,7 +507,7 @@ export default function MealDetailScreen() {
                   <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Calories</Text>
                   <TextInput
                     style={[styles.textInput, styles.numberInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                    value={editedMeal?.caloriesEstimate.toString()}
+                    value={editedMeal?.caloriesEstimate?.toString() || '0'}
                     onChangeText={(text) => updateEditedField('caloriesEstimate', parseFloat(text) || 0)}
                     keyboardType="numeric"
                     placeholder="0"
@@ -518,7 +518,7 @@ export default function MealDetailScreen() {
                   <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Protein (g)</Text>
                   <TextInput
                     style={[styles.textInput, styles.numberInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                    value={editedMeal?.proteinGrams.toString()}
+                    value={editedMeal?.proteinGrams?.toString() || '0'}
                     onChangeText={(text) => updateEditedField('proteinGrams', parseFloat(text) || 0)}
                     keyboardType="numeric"
                     placeholder="0"
@@ -532,7 +532,7 @@ export default function MealDetailScreen() {
                   <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Carbs (g)</Text>
                   <TextInput
                     style={[styles.textInput, styles.numberInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                    value={editedMeal?.carbsGrams.toString()}
+                    value={editedMeal?.carbsGrams?.toString() || '0'}
                     onChangeText={(text) => updateEditedField('carbsGrams', parseFloat(text) || 0)}
                     keyboardType="numeric"
                     placeholder="0"
@@ -543,7 +543,7 @@ export default function MealDetailScreen() {
                   <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Fat (g)</Text>
                   <TextInput
                     style={[styles.textInput, styles.numberInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                    value={editedMeal?.fatGrams.toString()}
+                    value={editedMeal?.fatGrams?.toString() || '0'}
                     onChangeText={(text) => updateEditedField('fatGrams', parseFloat(text) || 0)}
                     keyboardType="numeric"
                     placeholder="0"
@@ -556,7 +556,7 @@ export default function MealDetailScreen() {
                 <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Fiber (g)</Text>
                 <TextInput
                   style={[styles.textInput, styles.numberInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                  value={editedMeal?.fiberGrams.toString()}
+                  value={editedMeal?.fiberGrams?.toString() || '0'}
                   onChangeText={(text) => updateEditedField('fiberGrams', parseFloat(text) || 0)}
                   keyboardType="numeric"
                   placeholder="0"
@@ -568,7 +568,7 @@ export default function MealDetailScreen() {
                 <Text style={[styles.fieldLabel, { color: colors.success }]}>Good Points (one per line)</Text>
                 <TextInput
                   style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                  value={editedMeal?.goodPoints.join('\n')}
+                  value={editedMeal?.goodPoints?.join('\n') || ''}
                   onChangeText={(text) => updateEditedField('goodPoints', text.split('\n').map(s => s.trim()).filter(Boolean))}
                   placeholder="High protein\nRich in vitamins\nLow in sugar"
                   placeholderTextColor={colors.textMuted}
@@ -580,7 +580,7 @@ export default function MealDetailScreen() {
                 <Text style={[styles.fieldLabel, { color: colors.error }]}>Concerns (one per line)</Text>
                 <TextInput
                   style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                  value={editedMeal?.badPoints.join('\n')}
+                  value={editedMeal?.badPoints?.join('\n') || ''}
                   onChangeText={(text) => updateEditedField('badPoints', text.split('\n').map(s => s.trim()).filter(Boolean))}
                   placeholder="High sodium\nHigh sugar\nProcessed ingredients"
                   placeholderTextColor={colors.textMuted}
