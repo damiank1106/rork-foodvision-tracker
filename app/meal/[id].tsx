@@ -5,8 +5,8 @@ import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { GlassButton } from '@/components/GlassButton';
 import { useTheme } from '@/context/ThemeContext';
-import { getMealById, SavedMeal, updateMeal } from '@/services/mealsDb';
-import { ArrowLeft, Calendar, Flame, Utensils, AlertTriangle, CheckCircle2, Edit3, X, Save } from 'lucide-react-native';
+import { getMealById, SavedMeal, updateMeal, deleteMeal } from '@/services/mealsDb';
+import { ArrowLeft, Calendar, Flame, Utensils, AlertTriangle, CheckCircle2, Edit3, X, Save, Trash2, StickyNote } from 'lucide-react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
@@ -72,6 +72,32 @@ export default function MealDetailScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
+  const handleDelete = () => {
+    if (!meal) return;
+
+    Alert.alert(
+      'Delete meal',
+      'Are you sure you want to remove this meal from history?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteMeal(meal.id);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.back();
+            } catch (error) {
+              console.error('Failed to delete meal', error);
+              Alert.alert('Error', 'Could not delete meal. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const updateEditedField = <K extends keyof SavedMeal>(field: K, value: SavedMeal[K]) => {
     if (editedMeal) {
       setEditedMeal({ ...editedMeal, [field]: value });
@@ -99,11 +125,6 @@ export default function MealDetailScreen() {
     );
   }
 
-  const formattedDate = new Date(meal.createdAt).toLocaleString('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
-
   return (
     <ScreenWrapper>
       <Stack.Screen options={{ headerShown: false }} />
@@ -121,20 +142,31 @@ export default function MealDetailScreen() {
           </View>
         </View>
         <View style={styles.editButtonContainer}>
-          <GlassButton 
-            title="" 
-            onPress={handleEdit} 
+          <GlassButton
+            title=""
+            onPress={handleEdit}
             style={styles.editButton}
-            textStyle={{ display: 'none' }} 
+            textStyle={{ display: 'none' }}
           />
           <View style={styles.editIconContainer} pointerEvents="none">
              <Edit3 color={colors.primary} size={20} />
           </View>
         </View>
+        <View style={styles.deleteButtonContainer}>
+          <GlassButton
+            title=""
+            onPress={handleDelete}
+            style={styles.editButton}
+            textStyle={{ display: 'none' }}
+          />
+          <View style={styles.editIconContainer} pointerEvents="none">
+             <Trash2 color={colors.error} size={20} />
+          </View>
+        </View>
 
         {/* Image */}
         <Animated.View entering={ZoomIn.duration(500).springify()} style={[styles.imageContainer, { backgroundColor: colors.glassBackgroundStrong }]}>
-          <Image source={{ uri: meal.imageUri }} style={styles.image} resizeMode="cover" />
+          <Image source={{ uri: meal.photoUri || meal.imageUri }} style={styles.image} resizeMode="cover" />
         </Animated.View>
 
         {/* Content */}
@@ -144,7 +176,7 @@ export default function MealDetailScreen() {
               <Text style={[styles.dishName, { color: colors.text }]}>{meal.dishName}</Text>
               <View style={styles.metaRow}>
                 <Calendar size={16} color={colors.textSecondary} />
-                <Text style={[styles.dateText, { color: colors.textSecondary }]}>{formattedDate}</Text>
+                <Text style={[styles.dateText, { color: colors.textSecondary }]}>{new Date(meal.dateTime || meal.createdAt).toLocaleString()}</Text>
               </View>
               <View style={styles.calRow}>
                 <Flame size={20} color={colors.tint} />
@@ -214,6 +246,18 @@ export default function MealDetailScreen() {
               </View>
             </GlassCard>
           </Animated.View>
+
+          {!!meal.notes && (
+            <Animated.View entering={FadeInDown.delay(550).springify()}>
+              <GlassCard style={styles.card}>
+                <View style={styles.sectionHeader}>
+                  <StickyNote size={18} color={colors.text} style={{ marginRight: 6 }} />
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Notes</Text>
+                </View>
+                <Text style={[styles.bodyText, { color: colors.textSecondary }]}>{meal.notes}</Text>
+              </GlassCard>
+            </Animated.View>
+          )}
         </View>
 
       </ScrollView>
@@ -266,6 +310,18 @@ export default function MealDetailScreen() {
                   placeholderTextColor={colors.textMuted}
                   multiline
                   numberOfLines={3}
+                />
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Notes</Text>
+                <TextInput
+                  style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
+                  value={editedMeal?.notes || ''}
+                  onChangeText={(text) => updateEditedField('notes', text)}
+                  placeholder="Add personal notes or reminders"
+                  placeholderTextColor={colors.textMuted}
+                  multiline
                 />
               </View>
 
@@ -503,6 +559,15 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'ios' ? 0 : 40,
     right: 20,
     zIndex: 10,
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+  },
+  deleteButtonContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 56 : 96,
+    right: 20,
+    zIndex: 9,
     width: 50,
     height: 50,
     justifyContent: 'center',

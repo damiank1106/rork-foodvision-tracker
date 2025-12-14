@@ -3,9 +3,13 @@ import * as SQLite from 'expo-sqlite';
 export interface SavedMeal {
   id: string;
   imageUri: string;
+  photoUri?: string;
   createdAt: string; // ISO date
+  dateTime: string;
+  name: string;
   dishName: string;
   ingredientsDescription: string;
+  notes?: string;
   nutritionSummary: string;
   caloriesEstimate: number;
   proteinGrams: number;
@@ -14,6 +18,7 @@ export interface SavedMeal {
   fiberGrams: number;
   goodPoints: string[];
   badPoints: string[];
+  source: 'scanned' | 'manual';
 }
 
 export interface MealStats {
@@ -32,6 +37,17 @@ async function getDb() {
   return db;
 }
 
+async function ensureColumn(columnName: string, columnType: string, defaultValue?: string) {
+  const database = await getDb();
+  const existingColumns = await database.getAllAsync<{ name: string }>('PRAGMA table_info(meals)');
+  const hasColumn = existingColumns.some(col => col.name === columnName);
+
+  if (!hasColumn) {
+    const defaultClause = defaultValue ? ` DEFAULT ${defaultValue}` : '';
+    await database.execAsync(`ALTER TABLE meals ADD COLUMN ${columnName} ${columnType}${defaultClause};`);
+  }
+}
+
 function parseJsonSafely<T>(json: string | null | undefined, defaultValue: T, mealId?: string, fieldName?: string): T {
   try {
     if (!json) return defaultValue;
@@ -46,9 +62,13 @@ function rowToMeal(row: any): SavedMeal {
   return {
     id: row.id,
     imageUri: row.imageUri,
+    photoUri: row.photoUri || row.imageUri,
     createdAt: row.createdAt,
+    dateTime: row.dateTime || row.createdAt,
+    name: row.name || row.dishName,
     dishName: row.dishName,
     ingredientsDescription: row.ingredientsDescription,
+    notes: row.notes || '',
     nutritionSummary: row.nutritionSummary,
     caloriesEstimate: row.caloriesEstimate,
     proteinGrams: row.proteinGrams,
@@ -57,6 +77,7 @@ function rowToMeal(row: any): SavedMeal {
     fiberGrams: row.fiberGrams,
     goodPoints: parseJsonSafely(row.goodPointsJson, [], row.id, 'goodPoints'),
     badPoints: parseJsonSafely(row.badPointsJson, [], row.id, 'badPoints'),
+    source: (row.source as SavedMeal['source']) || 'scanned'
   };
 }
 
@@ -76,23 +97,37 @@ export async function initMealsDb() {
       fatGrams REAL,
       fiberGrams REAL,
       goodPointsJson TEXT,
-      badPointsJson TEXT
+      badPointsJson TEXT,
+      source TEXT,
+      name TEXT,
+      dateTime TEXT,
+      notes TEXT,
+      photoUri TEXT
     );
   `);
+
+  await ensureColumn('source', 'TEXT', `'scanned'`);
+  await ensureColumn('name', 'TEXT');
+  await ensureColumn('dateTime', 'TEXT');
+  await ensureColumn('notes', 'TEXT');
+  await ensureColumn('photoUri', 'TEXT');
 }
 
 export async function insertMeal(meal: SavedMeal) {
   const database = await getDb();
   await database.runAsync(
     `INSERT INTO meals (
-      id, imageUri, createdAt, dishName, ingredientsDescription, nutritionSummary,
+      id, imageUri, photoUri, createdAt, dateTime, name, dishName, ingredientsDescription, nutritionSummary,
       caloriesEstimate, proteinGrams, carbsGrams, fatGrams, fiberGrams,
-      goodPointsJson, badPointsJson
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      goodPointsJson, badPointsJson, source, notes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       meal.id,
       meal.imageUri,
+      meal.photoUri || meal.imageUri,
       meal.createdAt,
+      meal.dateTime,
+      meal.name,
       meal.dishName,
       meal.ingredientsDescription,
       meal.nutritionSummary,
@@ -103,6 +138,8 @@ export async function insertMeal(meal: SavedMeal) {
       meal.fiberGrams,
       JSON.stringify(meal.goodPoints),
       JSON.stringify(meal.badPoints),
+      meal.source,
+      meal.notes || '',
     ]
   );
 }
@@ -112,9 +149,13 @@ export async function updateMeal(meal: SavedMeal) {
   await database.runAsync(
     `UPDATE meals SET
       imageUri = ?,
+      photoUri = ?,
       createdAt = ?,
+      dateTime = ?,
+      name = ?,
       dishName = ?,
       ingredientsDescription = ?,
+      notes = ?,
       nutritionSummary = ?,
       caloriesEstimate = ?,
       proteinGrams = ?,
@@ -122,13 +163,18 @@ export async function updateMeal(meal: SavedMeal) {
       fatGrams = ?,
       fiberGrams = ?,
       goodPointsJson = ?,
-      badPointsJson = ?
+      badPointsJson = ?,
+      source = ?
     WHERE id = ?`,
     [
       meal.imageUri,
+      meal.photoUri || meal.imageUri,
       meal.createdAt,
+      meal.dateTime,
+      meal.name,
       meal.dishName,
       meal.ingredientsDescription,
+      meal.notes || '',
       meal.nutritionSummary,
       meal.caloriesEstimate,
       meal.proteinGrams,
@@ -137,6 +183,7 @@ export async function updateMeal(meal: SavedMeal) {
       meal.fiberGrams,
       JSON.stringify(meal.goodPoints),
       JSON.stringify(meal.badPoints),
+      meal.source,
       meal.id,
     ]
   );

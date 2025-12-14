@@ -3,9 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export interface SavedMeal {
   id: string;
   imageUri: string;
+  photoUri?: string;
   createdAt: string; // ISO date
+  dateTime: string;
+  name: string;
   dishName: string;
   ingredientsDescription: string;
+  notes?: string;
   nutritionSummary: string;
   caloriesEstimate: number;
   proteinGrams: number;
@@ -14,6 +18,7 @@ export interface SavedMeal {
   fiberGrams: number;
   goodPoints: string[];
   badPoints: string[];
+  source: 'scanned' | 'manual';
 }
 
 export interface MealStats {
@@ -50,9 +55,15 @@ export async function getAllMeals(): Promise<SavedMeal[]> {
   try {
     const json = await AsyncStorage.getItem(STORAGE_KEY);
     if (!json) return [];
-    
+
     try {
-      const meals: SavedMeal[] = JSON.parse(json);
+      const meals: SavedMeal[] = JSON.parse(json).map((m: any) => ({
+        ...m,
+        name: m.name || m.dishName,
+        dateTime: m.dateTime || m.createdAt,
+        photoUri: m.photoUri || m.imageUri,
+        source: (m.source as SavedMeal['source']) || 'scanned',
+      }));
       // Ensure sorted by date desc
       return meals.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } catch (parseError) {
@@ -75,6 +86,12 @@ export async function getRecentMeals(limit: number = 10): Promise<SavedMeal[]> {
 export async function getMealById(id: string): Promise<SavedMeal | null> {
   const meals = await getAllMeals();
   return meals.find(m => m.id === id) || null;
+}
+
+export async function updateMeal(updatedMeal: SavedMeal) {
+  const meals = await getAllMeals();
+  const updatedMeals = meals.map(meal => meal.id === updatedMeal.id ? updatedMeal : meal);
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMeals));
 }
 
 export async function getMealStats(): Promise<MealStats> {
