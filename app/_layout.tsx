@@ -22,7 +22,7 @@ function RootLayoutNav() {
     }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="meal/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="history/add" options={{ headerShown: false }} />
+      <Stack.Screen name="history/add" options={{ headerShown: false, title: 'Add Meal' }} />
       <Stack.Screen name="meal-ai/[mealId]" options={{ headerShown: false }} />
     </Stack>
   );

@@ -104,6 +104,7 @@ export default function AddMealScreen() {
         options={{
           headerShown: true,
           title: 'Add Meal',
+          headerBackTitle: '',
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
@@ -204,6 +205,7 @@ export default function AddMealScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
+    paddingTop: 12,
     paddingBottom: 40,
     gap: 16,
   },

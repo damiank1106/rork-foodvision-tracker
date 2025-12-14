@@ -90,6 +90,13 @@ export default function HomeScreen() {
     });
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
     <ScreenWrapper>
       <ScrollView 
@@ -104,6 +111,11 @@ export default function HomeScreen() {
              <Text style={[styles.title, { color: colors.text }]}>FoodVision</Text>
           </View>
           <Text style={[styles.dateText, { color: colors.textSecondary }]}>{getFormattedDate()}</Text>
+          {profile && profile.name !== 'Guest' && (
+            <Text style={[styles.greetingText, { color: colors.text }]}>
+              {getGreeting()}, {profile.name}!
+            </Text>
+          )}
         </Animated.View>
 
         {/* Today Summary Card */}
@@ -196,6 +208,12 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     marginLeft: 40,
+  },
+  greetingText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 40,
+    marginTop: 8,
   },
   section: {
     marginBottom: 24,
