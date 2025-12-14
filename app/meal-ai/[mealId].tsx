@@ -99,7 +99,7 @@ export default function MealAiScreen() {
           </View>
         )}
         <View style={[styles.bubble, isUser ? { backgroundColor: colors.primary } : { backgroundColor: colors.glassBackgroundStrong, borderWidth: 1, borderColor: colors.glassBorder }]}>
-          <Text style={[styles.messageText, isUser ? { color: '#fff' } : { color: colors.text }]}>{item.text}</Text>
+          <Text selectable style={[styles.messageText, isUser ? { color: '#fff' } : { color: colors.text }]}>{item.text}</Text>
         </View>
         {isUser && (
           <View style={[styles.avatar, styles.userAvatar, { backgroundColor: colors.primary }]}>

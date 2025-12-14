@@ -163,10 +163,13 @@ export default function CoachScreen() {
           isUser ? { backgroundColor: colors.primary, borderColor: colors.primary, borderBottomRightRadius: 4 } 
                  : { backgroundColor: colors.glassBackgroundStrong, borderColor: colors.glassBorder, borderBottomLeftRadius: 4 }
         ]}>
-          <Text style={[
-            styles.messageText,
-            isUser ? styles.userMessageText : { color: colors.text }
-          ]}>
+          <Text
+            selectable
+            style={[
+              styles.messageText,
+              isUser ? styles.userMessageText : { color: colors.text }
+            ]}
+          >
             {item.text}
           </Text>
         </View>
