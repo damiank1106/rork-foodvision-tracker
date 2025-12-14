@@ -12,6 +12,7 @@ interface GlassButtonProps {
   textStyle?: TextStyle;
   isLoading?: boolean;
   variant?: 'primary' | 'secondary';
+  disabled?: boolean;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -22,7 +23,8 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
   style, 
   textStyle, 
   isLoading = false,
-  variant = 'primary'
+  variant = 'primary',
+  disabled = false
 }) => {
   const { colors, theme } = useTheme();
   const scale = useSharedValue(1);
@@ -36,7 +38,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
   };
 
   const handlePress = () => {
-    if (isLoading) return;
+    if (isLoading || disabled) return;
     Haptics.selectionAsync();
     onPress();
   };
@@ -66,7 +68,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
       <View style={[
         styles.content, 
         variant === 'primary' && { backgroundColor: theme === 'dark' ? 'rgba(77, 184, 255, 0.3)' : 'rgba(77, 184, 255, 0.2)' },
-        isLoading && styles.loadingContent
+        (isLoading || disabled) && styles.loadingContent
       ]}>
         {isLoading ? (
           <ActivityIndicator color={colors.text} />

@@ -21,6 +21,7 @@ export const LightColors = {
   glassBorder: 'rgba(0, 0, 0, 0.1)', // Increased visibility (was 0.06)
   glassBackground: 'rgba(255, 255, 255, 0.9)',
   glassBackgroundStrong: 'rgba(255, 255, 255, 0.95)',
+  modalOverlay: 'rgba(0, 0, 0, 0.5)',
   
   success: '#34D399',
   error: '#EF4444',
@@ -52,6 +53,7 @@ export const DarkColors = {
   glassBorder: 'rgba(255, 255, 255, 0.25)',
   glassBackground: 'rgba(255, 255, 255, 0.12)',
   glassBackgroundStrong: 'rgba(30, 30, 30, 0.85)',
+  modalOverlay: 'rgba(0, 0, 0, 0.75)',
   
   success: '#34D399',
   error: '#EF4444',

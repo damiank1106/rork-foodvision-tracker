@@ -485,7 +485,7 @@ export default function MealDetailScreen() {
         animationType="fade"
         onRequestClose={() => setAiModalVisible(false)}
       >
-        <View style={[styles.aiOverlay, { backgroundColor: colors.modalOverlay || 'rgba(0,0,0,0.5)' }]}>
+        <View style={[styles.aiOverlay, { backgroundColor: colors.modalOverlay }]}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.aiAvoider}

@@ -71,10 +71,14 @@ export default function PhotoPreviewScreen() {
 
     try {
       const mealId = Crypto.randomUUID();
+      const timestamp = new Date().toISOString();
       await insertMeal({
         id: mealId,
         imageUri,
-        createdAt: new Date().toISOString(),
+        photoUri: imageUri,
+        createdAt: timestamp,
+        dateTime: timestamp,
+        name: result.dishName,
         dishName: result.dishName,
         ingredientsDescription: result.ingredientsDescription,
         nutritionSummary: result.nutritionSummary,
@@ -85,6 +89,7 @@ export default function PhotoPreviewScreen() {
         fiberGrams: result.fiberGrams,
         goodPoints: result.goodPoints,
         badPoints: result.badPoints,
+        source: 'scanned',
       });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
