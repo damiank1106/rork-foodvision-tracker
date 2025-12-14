@@ -8,7 +8,7 @@ import { GlassCard } from '@/components/GlassCard';
 import { GlassButton } from '@/components/GlassButton';
 import { useTheme } from '@/context/ThemeContext';
 import { insertMeal, SavedMeal } from '@/services/mealsDb';
-import { Camera, Image as ImageIcon, CalendarClock } from 'lucide-react-native';
+import { Camera, Image as ImageIcon, CalendarClock, ChevronLeft } from 'lucide-react-native';
 
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&auto=format&fit=crop&q=60';
 
@@ -99,18 +99,17 @@ export default function AddMealScreen() {
   };
 
   return (
-    <ScreenWrapper edges={['left', 'right', 'bottom']}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Add Meal',
-          headerBackTitle: ' ',
-          headerBackTitleVisible: false,
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-        }}
-      />
+    <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <ChevronLeft color={colors.text} size={28} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Add Meal</Text>
+        <View style={styles.headerRightPlaceholder} />
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -206,7 +205,7 @@ export default function AddMealScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
-    paddingTop: 4,
+    paddingTop: 0,
     paddingBottom: 40,
     gap: 16,
   },
@@ -275,5 +274,24 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 8,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  backButton: {
+    padding: 4,
+    marginLeft: -4,
+  },
+  headerRightPlaceholder: {
+    width: 28,
   },
 });
