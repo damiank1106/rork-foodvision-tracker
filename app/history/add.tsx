@@ -205,7 +205,7 @@ export default function AddMealScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
-    paddingTop: 0,
+    paddingTop: 2,
     paddingBottom: 40,
     gap: 16,
   },
