@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, ActivityIndicator, Alert, Platform, TextInput, TouchableOpacity, Modal, KeyboardAvoidingView, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Image, ActivityIndicator, Alert, Platform, TextInput, TouchableOpacity, Modal, KeyboardAvoidingView } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
@@ -24,8 +24,6 @@ export default function MealDetailScreen() {
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiHistory, setAiHistory] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
-  const { height } = useWindowDimensions();
-  const isCompactHeader = height < 720;
 
   useEffect(() => {
     if (id) {
@@ -145,13 +143,6 @@ export default function MealDetailScreen() {
       setEditedMeal({ ...editedMeal, [field]: value });
     }
   };
-
-  const renderFormattedAiText = (text: string, color: string) =>
-    text.split('\n').map((line, index) => (
-      <Text key={`${line}-${index}`} selectable style={[styles.aiHelperText, { color }]}>
-        {line.trim() || ' '}
-      </Text>
-    ));
 
   if (loading) {
     return (
@@ -334,13 +325,7 @@ export default function MealDetailScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.modalContent}
           >
-            <View
-              style={[
-                styles.modalHeader,
-                isCompactHeader && styles.modalHeaderCompact,
-                { borderBottomColor: colors.glassBorder },
-              ]}
-            >
+            <View style={[styles.modalHeader, { borderBottomColor: colors.glassBorder }]}>
               <TouchableOpacity onPress={handleCancelEdit} style={styles.modalHeaderButton}>
                 <X size={24} color={colors.text} />
               </TouchableOpacity>
@@ -355,44 +340,6 @@ export default function MealDetailScreen() {
             </View>
 
             <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalScrollContent}>
-              {aiHistory.length > 0 && (
-                <View
-                  style={[
-                    styles.aiHelperCard,
-                    { borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong },
-                  ]}
-                >
-                  <View style={styles.aiHelperHeader}>
-                    <Bot size={18} color={colors.primary} />
-                    <Text style={[styles.aiHelperTitle, { color: colors.text }]}>Recent AI responses</Text>
-                  </View>
-                  {aiHistory.map((message, index) => (
-                    <View
-                      key={`${message.role}-${index}-${message.text.slice(0, 8)}`}
-                      style={[
-                        styles.aiHelperMessage,
-                        message.role === 'user'
-                          ? { backgroundColor: colors.glassBackground, borderColor: colors.glassBorder }
-                          : { backgroundColor: colors.background, borderColor: colors.glassBorder },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.aiHelperLabel,
-                          { color: message.role === 'user' ? colors.textSecondary : colors.text },
-                        ]}
-                      >
-                        {message.role === 'user' ? 'You said' : 'AI suggested'}
-                      </Text>
-                      {renderFormattedAiText(message.text, colors.text)}
-                    </View>
-                  ))}
-                  <Text style={[styles.aiHelperFooter, { color: colors.textSecondary }]}>
-                    Tip: long-press and select any specific words or sentences you want to copy while editing.
-                  </Text>
-                </View>
-              )}
-
               <View style={styles.fieldGroup}>
                 <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Dish Name</Text>
                 <TextInput
@@ -789,9 +736,6 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomWidth: 1,
   },
-  modalHeaderCompact: {
-    paddingTop: Platform.OS === 'ios' ? 70 : 28,
-  },
   modalHeaderButton: {
     width: 44,
     height: 44,
@@ -808,40 +752,6 @@ const styles = StyleSheet.create({
   modalScrollContent: {
     padding: 20,
     paddingBottom: 40,
-  },
-  aiHelperCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 14,
-    marginBottom: 20,
-    gap: 10,
-  },
-  aiHelperHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  aiHelperTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  aiHelperMessage: {
-    borderRadius: 10,
-    borderWidth: 1,
-    padding: 10,
-    gap: 6,
-  },
-  aiHelperLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  aiHelperText: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  aiHelperFooter: {
-    fontSize: 12,
   },
   fieldGroup: {
     marginBottom: 20,
