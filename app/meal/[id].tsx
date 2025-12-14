@@ -22,7 +22,7 @@ export default function MealDetailScreen() {
   const [saving, setSaving] = useState(false);
   const [aiModalVisible, setAiModalVisible] = useState(false);
   const [aiQuestion, setAiQuestion] = useState('');
-  const [aiResponse, setAiResponse] = useState('');
+  const [aiHistory, setAiHistory] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
@@ -80,8 +80,7 @@ export default function MealDetailScreen() {
   const handleOpenAi = () => {
     if (!meal) return;
     const baseQuestion = `What do you think about ${meal.dishName || meal.name}?`;
-    setAiQuestion(baseQuestion);
-    setAiResponse('');
+    setAiQuestion((prev) => prev || baseQuestion);
     setAiModalVisible(true);
     Haptics.selectionAsync();
   };
@@ -95,10 +94,14 @@ export default function MealDetailScreen() {
       return;
     }
 
+    const question = aiQuestion.trim();
+    setAiHistory((prev) => [...prev, { role: 'user', text: question }]);
+
     setAiLoading(true);
     try {
-      const reply = await askMealAI(targetMeal, aiQuestion.trim());
-      setAiResponse(reply);
+      const reply = await askMealAI(targetMeal, question);
+      setAiHistory((prev) => [...prev, { role: 'ai', text: reply }]);
+      setAiQuestion('');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error: any) {
       console.error('AI error', error);
@@ -513,9 +516,34 @@ export default function MealDetailScreen() {
                   <Text style={[styles.aiSendText, { color: '#fff' }]}>Ask</Text>
                 )}
               </TouchableOpacity>
-              <ScrollView style={[styles.aiResponseBox, { borderColor: colors.glassBorder }]} contentContainerStyle={{ padding: 4 }}>
-                {aiResponse ? (
-                  <Text style={[styles.aiResponseText, { color: colors.text }]}>{aiResponse}</Text>
+              <ScrollView
+                style={[styles.aiResponseBox, { borderColor: colors.glassBorder, backgroundColor: colors.glassBackground }]}
+                contentContainerStyle={styles.aiResponseContent}
+              >
+                {aiHistory.length ? (
+                  aiHistory.map((message, index) => (
+                    <View
+                      key={`${message.role}-${index}-${message.text.slice(0, 10)}`}
+                      style={[
+                        styles.aiMessage,
+                        message.role === 'user'
+                          ? { borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }
+                          : { borderColor: colors.glassBorder, backgroundColor: colors.background },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.aiMessageLabel,
+                          { color: message.role === 'user' ? colors.textSecondary : colors.text },
+                        ]}
+                      >
+                        {message.role === 'user' ? 'You' : 'AI'}
+                      </Text>
+                      <Text selectable style={[styles.aiMessageText, { color: colors.text }]}>
+                        {message.text}
+                      </Text>
+                    </View>
+                  ))
                 ) : (
                   <Text style={[styles.aiPlaceholder, { color: colors.textSecondary }]}>AI tips will appear here.</Text>
                 )}
@@ -809,18 +837,32 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   aiResponseBox: {
-    minHeight: 90,
-    maxHeight: 200,
+    minHeight: 120,
+    maxHeight: 260,
     borderWidth: 1,
     borderRadius: 12,
-    padding: 8,
   },
-  aiResponseText: {
-    fontSize: 15,
-    lineHeight: 22,
+  aiResponseContent: {
+    padding: 8,
+    gap: 8,
   },
   aiPlaceholder: {
     fontSize: 14,
     textAlign: 'center',
+  },
+  aiMessage: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 10,
+    gap: 4,
+  },
+  aiMessageLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  aiMessageText: {
+    fontSize: 15,
+    lineHeight: 22,
   },
 });
