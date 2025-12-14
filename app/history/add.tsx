@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as Crypto from 'expo-crypto';
@@ -15,6 +15,7 @@ const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1504674900247-0877df9cc
 export default function AddMealScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const [mealName, setMealName] = useState('');
   const [notes, setNotes] = useState('');
   const [dateText, setDateText] = useState(new Date().toISOString());
@@ -103,10 +104,12 @@ export default function AddMealScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Add Meal',
+          title: width >= 430 ? '' : 'Add Meal',
           headerShadowVisible: false,
-          headerStyle: { backgroundColor: colors.background },
+          headerStyle: { backgroundColor: colors.background, height: 52 },
+          headerTitleStyle: { fontSize: 16, fontWeight: '700' },
           headerTintColor: colors.text,
+          headerBackTitleVisible: false,
         }}
       />
       <KeyboardAvoidingView
