@@ -7,9 +7,11 @@ import { GlassButton } from '@/components/GlassButton';
 import { useTheme } from '@/context/ThemeContext';
 import { getMealById, SavedMeal, updateMeal, deleteMeal } from '@/services/mealsDb';
 import { askMealAI } from '@/services/mealAi';
-import { ArrowLeft, Calendar, Flame, Utensils, AlertTriangle, CheckCircle2, Edit3, X, Save, Trash2, StickyNote, Bot } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Flame, Utensils, AlertTriangle, CheckCircle2, Edit3, X, Save, Trash2, StickyNote, Bot, Camera, ImageIcon } from 'lucide-react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function MealDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,12 +26,59 @@ export default function MealDetailScreen() {
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiHistory, setAiHistory] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
+  const [imagePickerVisible, setImagePickerVisible] = useState(false);
 
   useEffect(() => {
     if (id) {
       loadMeal(id);
+      loadAiHistory(id);
     }
   }, [id]);
+
+  const loadAiHistory = async (mealId: string) => {
+    try {
+      const stored = await AsyncStorage.getItem(`ai_conversation_${mealId}`);
+      if (stored) {
+        setAiHistory(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Failed to load AI history:', error);
+    }
+  };
+
+  const saveAiHistory = async (mealId: string, history: { role: 'user' | 'ai'; text: string }[]) => {
+    try {
+      await AsyncStorage.setItem(`ai_conversation_${mealId}`, JSON.stringify(history));
+    } catch (error) {
+      console.error('Failed to save AI history:', error);
+    }
+  };
+
+  const clearAiHistory = async () => {
+    if (!id) return;
+    
+    Alert.alert(
+      'Clear Conversation',
+      'Are you sure you want to delete this AI conversation?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem(`ai_conversation_${id}`);
+              setAiHistory([]);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            } catch (error) {
+              console.error('Failed to clear AI history:', error);
+              Alert.alert('Error', 'Could not clear conversation.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const loadMeal = async (mealId: string) => {
     try {
@@ -95,12 +144,17 @@ export default function MealDetailScreen() {
     }
 
     const question = aiQuestion.trim();
-    setAiHistory((prev) => [...prev, { role: 'user', text: question }]);
+    const updatedHistory = [...aiHistory, { role: 'user' as const, text: question }];
+    setAiHistory(updatedHistory);
 
     setAiLoading(true);
     try {
       const reply = await askMealAI(targetMeal, question);
-      setAiHistory((prev) => [...prev, { role: 'ai', text: reply }]);
+      const finalHistory = [...updatedHistory, { role: 'ai' as const, text: reply }];
+      setAiHistory(finalHistory);
+      if (id) {
+        await saveAiHistory(id, finalHistory);
+      }
       setAiQuestion('');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error: any) {
@@ -141,6 +195,46 @@ export default function MealDetailScreen() {
   const updateEditedField = <K extends keyof SavedMeal>(field: K, value: SavedMeal[K]) => {
     if (editedMeal) {
       setEditedMeal({ ...editedMeal, [field]: value });
+    }
+  };
+
+  const handlePickImage = async (source: 'camera' | 'library') => {
+    setImagePickerVisible(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    try {
+      let result;
+      if (source === 'camera') {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Camera permission is needed to take photos.');
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          quality: 0.8,
+        });
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Photo library permission is needed.');
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          quality: 0.8,
+        });
+      }
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const newUri = result.assets[0].uri;
+        updateEditedField('photoUri', newUri);
+        updateEditedField('imageUri', newUri);
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to select image.');
     }
   };
 
@@ -340,6 +434,25 @@ export default function MealDetailScreen() {
             </View>
 
             <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalScrollContent}>
+              {editedMeal && (
+                <View style={styles.imageEditContainer}>
+                  <Image 
+                    source={{ uri: editedMeal.photoUri || editedMeal.imageUri }} 
+                    style={styles.editImage} 
+                    resizeMode="cover" 
+                  />
+                  <View style={styles.imageButtonsRow}>
+                    <TouchableOpacity 
+                      onPress={() => setImagePickerVisible(true)}
+                      style={[styles.imageEditButton, { backgroundColor: colors.primary }]}
+                    >
+                      <Camera size={18} color="#fff" />
+                      <Text style={styles.imageEditButtonText}>Change Photo</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
               <View style={styles.fieldGroup}>
                 <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Dish Name</Text>
                 <TextInput
@@ -452,24 +565,24 @@ export default function MealDetailScreen() {
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.success }]}>Good Points (comma separated)</Text>
+                <Text style={[styles.fieldLabel, { color: colors.success }]}>Good Points (one per line)</Text>
                 <TextInput
                   style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                  value={editedMeal?.goodPoints.join(', ')}
-                  onChangeText={(text) => updateEditedField('goodPoints', text.split(',').map(s => s.trim()).filter(Boolean))}
-                  placeholder="High protein, Rich in vitamins"
+                  value={editedMeal?.goodPoints.join('\n')}
+                  onChangeText={(text) => updateEditedField('goodPoints', text.split('\n').map(s => s.trim()).filter(Boolean))}
+                  placeholder="High protein\nRich in vitamins\nLow in sugar"
                   placeholderTextColor={colors.textMuted}
                   multiline
                 />
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.error }]}>Concerns (comma separated)</Text>
+                <Text style={[styles.fieldLabel, { color: colors.error }]}>Concerns (one per line)</Text>
                 <TextInput
                   style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
-                  value={editedMeal?.badPoints.join(', ')}
-                  onChangeText={(text) => updateEditedField('badPoints', text.split(',').map(s => s.trim()).filter(Boolean))}
-                  placeholder="High sodium, High sugar"
+                  value={editedMeal?.badPoints.join('\n')}
+                  onChangeText={(text) => updateEditedField('badPoints', text.split('\n').map(s => s.trim()).filter(Boolean))}
+                  placeholder="High sodium\nHigh sugar\nProcessed ingredients"
                   placeholderTextColor={colors.textMuted}
                   multiline
                 />
@@ -493,9 +606,16 @@ export default function MealDetailScreen() {
             <View style={[styles.aiCard, { backgroundColor: colors.background, borderColor: colors.glassBorder }]}>
               <View style={[styles.aiHeader, { borderBottomColor: colors.glassBorder }]}>
                 <Text style={[styles.aiTitle, { color: colors.text }]}>Ask AI about this meal</Text>
-                <TouchableOpacity onPress={() => setAiModalVisible(false)} style={styles.aiCloseButton}>
-                  <X size={20} color={colors.text} />
-                </TouchableOpacity>
+                <View style={styles.aiHeaderButtons}>
+                  {aiHistory.length > 0 && (
+                    <TouchableOpacity onPress={clearAiHistory} style={styles.aiClearButton}>
+                      <Trash2 size={18} color={colors.error} />
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity onPress={() => setAiModalVisible(false)} style={styles.aiCloseButton}>
+                    <X size={20} color={colors.text} />
+                  </TouchableOpacity>
+                </View>
               </View>
               <TextInput
                 value={aiQuestion}
@@ -550,6 +670,40 @@ export default function MealDetailScreen() {
               </ScrollView>
             </View>
           </KeyboardAvoidingView>
+        </View>
+      </Modal>
+
+      {/* Image Picker Modal */}
+      <Modal
+        visible={imagePickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImagePickerVisible(false)}
+      >
+        <View style={[styles.imagePickerOverlay, { backgroundColor: colors.modalOverlay }]}>
+          <View style={[styles.imagePickerCard, { backgroundColor: colors.background, borderColor: colors.glassBorder }]}>
+            <Text style={[styles.imagePickerTitle, { color: colors.text }]}>Change Photo</Text>
+            <TouchableOpacity
+              onPress={() => handlePickImage('camera')}
+              style={[styles.imagePickerButton, { backgroundColor: colors.glassBackgroundStrong, borderColor: colors.glassBorder }]}
+            >
+              <Camera size={24} color={colors.primary} />
+              <Text style={[styles.imagePickerButtonText, { color: colors.text }]}>Take Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handlePickImage('library')}
+              style={[styles.imagePickerButton, { backgroundColor: colors.glassBackgroundStrong, borderColor: colors.glassBorder }]}
+            >
+              <ImageIcon size={24} color={colors.primary} />
+              <Text style={[styles.imagePickerButtonText, { color: colors.text }]}>Choose from Library</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setImagePickerVisible(false)}
+              style={[styles.imagePickerCancelButton, { backgroundColor: colors.glassBackgroundStrong }]}
+            >
+              <Text style={[styles.imagePickerCancelText, { color: colors.textSecondary }]}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </ScreenWrapper>
@@ -732,7 +886,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 20,
+    paddingTop: Platform.OS === 'ios' ? 64 : 24,
     paddingBottom: 16,
     borderBottomWidth: 1,
   },
@@ -741,6 +895,9 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    ...(Platform.OS === 'web' ? {
+      cursor: 'pointer' as any,
+    } : {}),
   },
   modalTitle: {
     fontSize: 20,
@@ -814,8 +971,22 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
+  aiHeaderButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  aiClearButton: {
+    padding: 6,
+    ...(Platform.OS === 'web' ? {
+      cursor: 'pointer' as any,
+    } : {}),
+  },
   aiCloseButton: {
     padding: 6,
+    ...(Platform.OS === 'web' ? {
+      cursor: 'pointer' as any,
+    } : {}),
   },
   aiInput: {
     borderRadius: 12,
@@ -864,5 +1035,75 @@ const styles = StyleSheet.create({
   aiMessageText: {
     fontSize: 15,
     lineHeight: 22,
+  },
+  imageEditContainer: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  editImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  imageButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  imageEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 8,
+  },
+  imageEditButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  imagePickerOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  imagePickerCard: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+  },
+  imagePickerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  imagePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    gap: 12,
+  },
+  imagePickerButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  imagePickerCancelButton: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  imagePickerCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
