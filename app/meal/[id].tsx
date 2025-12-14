@@ -6,7 +6,8 @@ import { GlassCard } from '@/components/GlassCard';
 import { GlassButton } from '@/components/GlassButton';
 import { useTheme } from '@/context/ThemeContext';
 import { getMealById, SavedMeal, updateMeal, deleteMeal } from '@/services/mealsDb';
-import { ArrowLeft, Calendar, Flame, Utensils, AlertTriangle, CheckCircle2, Edit3, X, Save, Trash2, StickyNote } from 'lucide-react-native';
+import { askMealAI } from '@/services/mealAi';
+import { ArrowLeft, Calendar, Flame, Utensils, AlertTriangle, CheckCircle2, Edit3, X, Save, Trash2, StickyNote, Bot } from 'lucide-react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
@@ -19,6 +20,10 @@ export default function MealDetailScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editedMeal, setEditedMeal] = useState<SavedMeal | null>(null);
   const [saving, setSaving] = useState(false);
+  const [aiModalVisible, setAiModalVisible] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -70,6 +75,38 @@ export default function MealDetailScreen() {
     setEditModalVisible(false);
     setEditedMeal(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handleOpenAi = () => {
+    if (!meal) return;
+    const baseQuestion = `What do you think about ${meal.dishName || meal.name}?`;
+    setAiQuestion(baseQuestion);
+    setAiResponse('');
+    setAiModalVisible(true);
+    Haptics.selectionAsync();
+  };
+
+  const handleAskAi = async () => {
+    const targetMeal = editedMeal || meal;
+    if (!targetMeal) return;
+
+    if (!aiQuestion.trim()) {
+      Alert.alert('Ask a question', 'Please enter a question for the AI.');
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const reply = await askMealAI(targetMeal, aiQuestion.trim());
+      setAiResponse(reply);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error: any) {
+      console.error('AI error', error);
+      Alert.alert('AI unavailable', error?.message || 'Could not reach the AI service.');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleDelete = () => {
@@ -161,6 +198,17 @@ export default function MealDetailScreen() {
           />
           <View style={styles.editIconContainer} pointerEvents="none">
              <Trash2 color={colors.error} size={20} />
+          </View>
+        </View>
+        <View style={styles.aiButtonContainer}>
+          <GlassButton
+            title=""
+            onPress={handleOpenAi}
+            style={styles.editButton}
+            textStyle={{ display: 'none' }}
+          />
+          <View style={styles.editIconContainer} pointerEvents="none">
+             <Bot color={colors.primary} size={20} />
           </View>
         </View>
 
@@ -427,6 +475,55 @@ export default function MealDetailScreen() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      <Modal
+        visible={aiModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAiModalVisible(false)}
+      >
+        <View style={[styles.aiOverlay, { backgroundColor: colors.modalOverlay || 'rgba(0,0,0,0.5)' }]}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.aiAvoider}
+          >
+            <View style={[styles.aiCard, { backgroundColor: colors.background, borderColor: colors.glassBorder }]}>
+              <View style={[styles.aiHeader, { borderBottomColor: colors.glassBorder }]}>
+                <Text style={[styles.aiTitle, { color: colors.text }]}>Ask AI about this meal</Text>
+                <TouchableOpacity onPress={() => setAiModalVisible(false)} style={styles.aiCloseButton}>
+                  <X size={20} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                value={aiQuestion}
+                onChangeText={setAiQuestion}
+                placeholder="Ask for healthier swaps, macro tips, or portion advice"
+                placeholderTextColor={colors.textMuted}
+                style={[styles.aiInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
+                multiline
+              />
+              <TouchableOpacity
+                onPress={handleAskAi}
+                disabled={aiLoading}
+                style={[styles.aiSendButton, { backgroundColor: aiLoading ? colors.glassBackgroundStrong : colors.primary }]}
+              >
+                {aiLoading ? (
+                  <ActivityIndicator size="small" color={colors.text} />
+                ) : (
+                  <Text style={[styles.aiSendText, { color: '#fff' }]}>Ask</Text>
+                )}
+              </TouchableOpacity>
+              <ScrollView style={[styles.aiResponseBox, { borderColor: colors.glassBorder }]} contentContainerStyle={{ padding: 4 }}>
+                {aiResponse ? (
+                  <Text style={[styles.aiResponseText, { color: colors.text }]}>{aiResponse}</Text>
+                ) : (
+                  <Text style={[styles.aiPlaceholder, { color: colors.textSecondary }]}>AI tips will appear here.</Text>
+                )}
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </ScreenWrapper>
   );
 }
@@ -572,6 +669,15 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
   },
+  aiButtonContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 112 : 152,
+    right: 20,
+    zIndex: 8,
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+  },
   editButton: {
     width: 50,
     height: 50,
@@ -648,5 +754,73 @@ const styles = StyleSheet.create({
   },
   macroField: {
     flex: 1,
+  },
+  aiOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  aiAvoider: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  aiCard: {
+    width: '100%',
+    maxWidth: 480,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+  },
+  aiHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+  },
+  aiTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    flex: 1,
+    marginRight: 8,
+  },
+  aiCloseButton: {
+    padding: 6,
+  },
+  aiInput: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    minHeight: 70,
+    textAlignVertical: 'top',
+    marginBottom: 10,
+  },
+  aiSendButton: {
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  aiSendText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  aiResponseBox: {
+    minHeight: 90,
+    maxHeight: 200,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 8,
+  },
+  aiResponseText: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  aiPlaceholder: {
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

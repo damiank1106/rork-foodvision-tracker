@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Alert, Dimensions, Platform, Modal, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Alert, Dimensions, Platform } from 'react-native';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { useTheme } from '@/context/ThemeContext';
-import { CalendarDays, ChevronRight, Clock, Trash2, Plus, Sparkles } from 'lucide-react-native';
+import { CalendarDays, ChevronRight, Clock, Trash2, Plus } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { getAllMeals, SavedMeal, deleteMeal } from '@/services/mealsDb';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -34,9 +34,6 @@ export default function HistoryScreen() {
   const { colors } = useTheme();
   const [meals, setMeals] = useState<SavedMeal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMealId, setSelectedMealId] = useState<string | null>(null);
-  const [selectModalVisible, setSelectModalVisible] = useState(false);
-
   const [animationKey, setAnimationKey] = useState(0);
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -102,7 +99,6 @@ export default function HistoryScreen() {
         <GlassCard style={styles.mealCard}>
           <TouchableOpacity
             onPress={() => {
-              setSelectedMealId(item.id);
               router.push(`/meal/${item.id}`);
             }}
             activeOpacity={0.8}
@@ -143,45 +139,18 @@ export default function HistoryScreen() {
     router.push('/history/add');
   };
 
-  const handleOpenAi = () => {
-    if (selectedMealId) {
-      router.push(`/meal-ai/${selectedMealId}`);
-      return;
-    }
-
-    if (meals.length === 0) {
-      Alert.alert('Select a meal first', 'Add or open a meal to start an AI chat.');
-      return;
-    }
-
-    setSelectModalVisible(true);
-  };
-
-  const handleSelectMealForAi = (mealId: string) => {
-    setSelectedMealId(mealId);
-    setSelectModalVisible(false);
-    router.push(`/meal-ai/${mealId}`);
-  };
-
   return (
     <ScreenWrapper>
       <View style={styles.content}>
         <View style={styles.header}>
           <Animated.Text
             key={`title-${animationKey}`}
-            entering={FadeInDown.duration(500).springify()} 
+            entering={FadeInDown.duration(500).springify()}
             style={[styles.title, { color: colors.text }]}
           >
             History
           </Animated.Text>
           <View style={styles.headerActions}>
-            <TouchableOpacity
-              onPress={handleOpenAi}
-              style={[styles.headerIconButton, { backgroundColor: colors.glassBackgroundStrong }]}
-              hitSlop={10}
-            >
-              <Sparkles color={colors.text} size={20} />
-            </TouchableOpacity>
             <TouchableOpacity
               onPress={handleStartAddMeal}
               style={[styles.headerIconButton, { backgroundColor: colors.glassBackgroundStrong }]}
@@ -209,43 +178,6 @@ export default function HistoryScreen() {
           />
         )}
       </View>
-
-      <Modal visible={selectModalVisible} animationType="slide" transparent onRequestClose={() => setSelectModalVisible(false)}>
-        <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay || 'rgba(0,0,0,0.5)' }]}> 
-          <View style={[styles.modalCard, { backgroundColor: colors.background, borderColor: colors.glassBorder }]}> 
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Select a meal</Text>
-            <ScrollView style={{ maxHeight: 320 }}>
-              {meals.map(meal => (
-                <TouchableOpacity
-                  key={meal.id}
-                  onPress={() => handleSelectMealForAi(meal.id)}
-                  style={[styles.modalRow, { borderBottomColor: colors.glassBorder }]}
-                >
-                  <View style={styles.modalRowLeft}>
-                    <Image
-                      source={{ uri: meal.photoUri || meal.imageUri }}
-                      style={[styles.modalThumb, { backgroundColor: colors.glassBackgroundStrong }]}
-                    />
-                    <View>
-                      <Text style={[styles.modalMealName, { color: colors.text }]} numberOfLines={1}>{meal.name || meal.dishName}</Text>
-                      <Text style={[styles.modalMealDate, { color: colors.textSecondary }]}>
-                        {new Date(meal.dateTime || meal.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </Text>
-                    </View>
-                  </View>
-                  <ChevronRight color={colors.textSecondary} size={18} />
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity
-              onPress={() => setSelectModalVisible(false)}
-              style={[styles.modalClose, { backgroundColor: colors.glassBackgroundStrong }]}
-            >
-              <Text style={{ color: colors.text }}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </ScreenWrapper>
   );
 }
@@ -351,54 +283,5 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     marginTop: 8,
     textAlign: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 420,
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  modalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  modalRowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  modalThumb: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-  },
-  modalMealName: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalMealDate: {
-    fontSize: 12,
-  },
-  modalClose: {
-    marginTop: 12,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
   },
 });

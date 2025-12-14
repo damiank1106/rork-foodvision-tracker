@@ -173,7 +173,7 @@ export default function AddMealScreen() {
                 style={[styles.actionButton, { backgroundColor: colors.glassBackgroundStrong }]}
               >
                 <Camera color={colors.text} size={18} />
-                <Text style={[styles.actionText, { color: colors.text }]}>Take Photo</Text>
+                <Text style={[styles.actionText, { color: colors.text }]}>Photo</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => requestImage('library')}
