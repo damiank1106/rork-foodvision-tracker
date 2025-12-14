@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as Crypto from 'expo-crypto';
@@ -15,11 +15,14 @@ const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1504674900247-0877df9cc
 export default function AddMealScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { height } = useWindowDimensions();
   const [mealName, setMealName] = useState('');
   const [notes, setNotes] = useState('');
   const [dateText, setDateText] = useState(new Date().toISOString());
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const isCompactScreen = height <= 780;
 
   const parsedDate = new Date(dateText);
   const readableDate = isNaN(parsedDate.getTime()) ? 'Invalid date' : parsedDate.toLocaleString();
@@ -109,13 +112,14 @@ export default function AddMealScreen() {
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
+          presentation: 'modal',
         }}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, isCompactScreen && styles.scrollContentCompact]}>
           <GlassCard style={styles.card}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Meal Name *</Text>
             <TextInput
@@ -209,6 +213,10 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 40,
     gap: 16,
+  },
+  scrollContentCompact: {
+    paddingTop: 0,
+    gap: 12,
   },
   card: {
     padding: 16,
