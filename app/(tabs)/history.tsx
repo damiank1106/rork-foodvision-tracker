@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Alert, Dimen
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { useTheme } from '@/context/ThemeContext';
-import { CalendarDays, ChevronRight, Clock, Trash2, Plus } from 'lucide-react-native';
+import { CalendarDays, Clock, Trash2, Plus } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { getAllMeals, SavedMeal, deleteMeal } from '@/services/mealsDb';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -115,7 +115,6 @@ export default function HistoryScreen() {
               </View>
               <Text style={[styles.calsText, { color: colors.tint }]}>{Math.round(item.caloriesEstimate)} kcal</Text>
             </View>
-            <ChevronRight color={colors.textSecondary} size={20} />
           </TouchableOpacity>
           {!isMockMeal && (
             <TouchableOpacity
