@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, ScrollView, RefreshControl, TouchableOpacity, A
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { useTheme } from '@/context/ThemeContext';
-import { Flame, TrendingUp, TrendingDown, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Award, Apple } from 'lucide-react-native';
+import { Flame, TrendingUp, TrendingDown, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Award, Apple, BarChart3, ChevronDown } from 'lucide-react-native';
 import { useFocusEffect } from 'expo-router';
 
 import { useProfile } from '@/context/ProfileContext';
@@ -69,6 +69,16 @@ interface MonthStats {
   minCaloriesDay: number;
 }
 
+interface CompareMonthData {
+  month: number;
+  year: number;
+  totalCalories: number;
+  totalProtein: number;
+  totalFats: number;
+  totalFiber: number;
+  hasMeals: boolean;
+}
+
 export default function StatsScreen() {
   const { colors } = useTheme();
   const { profile } = useProfile();
@@ -80,12 +90,24 @@ export default function StatsScreen() {
   const [calendarDays, setCalendarDays] = useState<DayData[]>([]);
   const [selectedDay, setSelectedDay] = useState<DayData | null>(null);
   const [monthStats, setMonthStats] = useState<MonthStats | null>(null);
+  
+  const [compareMonth1, setCompareMonth1] = useState<number>(new Date().getMonth());
+  const [compareYear1, setCompareYear1] = useState<number>(new Date().getFullYear());
+  const [compareMonth2, setCompareMonth2] = useState<number>(new Date().getMonth() - 1 < 0 ? 11 : new Date().getMonth() - 1);
+  const [compareYear2, setCompareYear2] = useState<number>(new Date().getMonth() - 1 < 0 ? new Date().getFullYear() - 1 : new Date().getFullYear());
+  const [showMonth1Picker, setShowMonth1Picker] = useState<boolean>(false);
+  const [showYear1Picker, setShowYear1Picker] = useState<boolean>(false);
+  const [showMonth2Picker, setShowMonth2Picker] = useState<boolean>(false);
+  const [showYear2Picker, setShowYear2Picker] = useState<boolean>(false);
+  const [compareData, setCompareData] = useState<{month1: CompareMonthData | null, month2: CompareMonthData | null}>({month1: null, month2: null});
 
   const progressAnim = useRef(new RNAnimated.Value(0)).current;
   const titleFadeAnim = useRef(new RNAnimated.Value(0)).current;
   const calendarFadeAnim = useRef(new RNAnimated.Value(0)).current;
   const detailsFadeAnim = useRef(new RNAnimated.Value(0)).current;
   const summaryFadeAnim = useRef(new RNAnimated.Value(0)).current;
+  const compareBar1Anim = useRef(new RNAnimated.Value(0)).current;
+  const compareBar2Anim = useRef(new RNAnimated.Value(0)).current;
 
   // Keep track of currentDate in a ref to avoid triggering useFocusEffect when it changes
   const currentDateRef = useRef(currentDate);
@@ -751,7 +773,414 @@ export default function StatsScreen() {
             </>
           )}
         </GlassCard>
+
+        <GlassCard style={styles.compareCard} contentStyle={{ padding: responsive.isSmallPhone ? 16 : 20 }}>
+          <View style={styles.compareHeader}>
+            <BarChart3 size={responsive.isSmallPhone ? 18 : 20} color={colors.tint} />
+            <View style={styles.compareHeaderText}>
+              <Text style={[styles.compareTitle, { color: colors.text, fontSize: responsive.isSmallPhone ? 14 : 16 }]}>Compare</Text>
+              <Text style={[styles.compareSubtitle, { color: colors.textMuted, fontSize: responsive.isSmallPhone ? 10 : 11 }]}>Compare nutrition data between months</Text>
+            </View>
+          </View>
+          {renderCompareSection()}
+        </GlassCard>
       </RNAnimated.View>
+    );
+  };
+
+  const getMonthCompareData = async (year: number, month: number): Promise<CompareMonthData> => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    lastDay.setHours(23, 59, 59, 999);
+    
+    const meals = await getMealsByDateRange(firstDay.toISOString(), lastDay.toISOString());
+    
+    if (meals.length === 0) {
+      return {
+        month,
+        year,
+        totalCalories: 0,
+        totalProtein: 0,
+        totalFats: 0,
+        totalFiber: 0,
+        hasMeals: false,
+      };
+    }
+    
+    const totals = meals.reduce((acc, meal) => ({
+      totalCalories: acc.totalCalories + meal.caloriesEstimate,
+      totalProtein: acc.totalProtein + meal.proteinGrams,
+      totalFats: acc.totalFats + meal.fatGrams,
+      totalFiber: acc.totalFiber + meal.fiberGrams,
+    }), { totalCalories: 0, totalProtein: 0, totalFats: 0, totalFiber: 0 });
+    
+    return {
+      month,
+      year,
+      totalCalories: Math.round(totals.totalCalories),
+      totalProtein: Math.round(totals.totalProtein),
+      totalFats: Math.round(totals.totalFats),
+      totalFiber: Math.round(totals.totalFiber),
+      hasMeals: true,
+    };
+  };
+
+  const loadCompareData = useCallback(async () => {
+    try {
+      const data1 = await getMonthCompareData(compareYear1, compareMonth1);
+      const data2 = await getMonthCompareData(compareYear2, compareMonth2);
+      setCompareData({ month1: data1, month2: data2 });
+      
+      compareBar1Anim.setValue(0);
+      compareBar2Anim.setValue(0);
+      
+      RNAnimated.parallel([
+        RNAnimated.spring(compareBar1Anim, {
+          toValue: 1,
+          useNativeDriver: false,
+          tension: 40,
+          friction: 7,
+        }),
+        RNAnimated.spring(compareBar2Anim, {
+          toValue: 1,
+          useNativeDriver: false,
+          tension: 40,
+          friction: 7,
+        }),
+      ]).start();
+    } catch (e) {
+      console.error('Error loading compare data:', e);
+    }
+  }, [compareYear1, compareMonth1, compareYear2, compareMonth2, compareBar1Anim, compareBar2Anim]);
+
+  useEffect(() => {
+    loadCompareData();
+  }, [loadCompareData]);
+
+  const renderCompareSection = () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
+    
+    const data1 = compareData.month1;
+    const data2 = compareData.month2;
+    
+    const maxCalories = data1 && data2 ? Math.max(data1.totalCalories, data2.totalCalories, 1) : 1;
+    const maxProtein = data1 && data2 ? Math.max(data1.totalProtein, data2.totalProtein, 1) : 1;
+    const maxFats = data1 && data2 ? Math.max(data1.totalFats, data2.totalFats, 1) : 1;
+    const maxFiber = data1 && data2 ? Math.max(data1.totalFiber, data2.totalFiber, 1) : 1;
+    
+    return (
+      <View style={styles.compareContent}>
+        <View style={styles.comparePickersRow}>
+          <View style={styles.compareColumn}>
+            <Text style={[styles.compareColumnLabel, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>Period 1</Text>
+            <View style={styles.pickerRow}>
+              <TouchableOpacity 
+                style={[styles.pickerButton, { backgroundColor: colors.glassBorder }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowMonth1Picker(!showMonth1Picker);
+                  setShowYear1Picker(false);
+                  setShowMonth2Picker(false);
+                  setShowYear2Picker(false);
+                }}
+              >
+                <Text style={[styles.pickerButtonText, { color: colors.text, fontSize: responsive.isSmallPhone ? 12 : 14 }]}>{months[compareMonth1]}</Text>
+                <ChevronDown size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.pickerButton, { backgroundColor: colors.glassBorder }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowYear1Picker(!showYear1Picker);
+                  setShowMonth1Picker(false);
+                  setShowMonth2Picker(false);
+                  setShowYear2Picker(false);
+                }}
+              >
+                <Text style={[styles.pickerButtonText, { color: colors.text, fontSize: responsive.isSmallPhone ? 12 : 14 }]}>{compareYear1}</Text>
+                <ChevronDown size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {showMonth1Picker && (
+              <View style={[styles.pickerDropdown, { backgroundColor: colors.glassBackgroundStrong }]}>
+                <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
+                  {months.map((m, idx) => (
+                    <TouchableOpacity 
+                      key={idx}
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        Haptics.selectionAsync();
+                        setCompareMonth1(idx);
+                        setShowMonth1Picker(false);
+                      }}
+                    >
+                      <Text style={[styles.pickerOptionText, { color: compareMonth1 === idx ? colors.tint : colors.text, fontSize: responsive.isSmallPhone ? 12 : 14 }]}>{m}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+            {showYear1Picker && (
+              <View style={[styles.pickerDropdown, { backgroundColor: colors.glassBackgroundStrong }]}>
+                <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
+                  {years.map((y) => (
+                    <TouchableOpacity 
+                      key={y}
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        Haptics.selectionAsync();
+                        setCompareYear1(y);
+                        setShowYear1Picker(false);
+                      }}
+                    >
+                      <Text style={[styles.pickerOptionText, { color: compareYear1 === y ? colors.tint : colors.text, fontSize: responsive.isSmallPhone ? 12 : 14 }]}>{y}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.compareColumn}>
+            <Text style={[styles.compareColumnLabel, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>Period 2</Text>
+            <View style={styles.pickerRow}>
+              <TouchableOpacity 
+                style={[styles.pickerButton, { backgroundColor: colors.glassBorder }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowMonth2Picker(!showMonth2Picker);
+                  setShowMonth1Picker(false);
+                  setShowYear1Picker(false);
+                  setShowYear2Picker(false);
+                }}
+              >
+                <Text style={[styles.pickerButtonText, { color: colors.text, fontSize: responsive.isSmallPhone ? 12 : 14 }]}>{months[compareMonth2]}</Text>
+                <ChevronDown size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.pickerButton, { backgroundColor: colors.glassBorder }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowYear2Picker(!showYear2Picker);
+                  setShowMonth1Picker(false);
+                  setShowYear1Picker(false);
+                  setShowMonth2Picker(false);
+                }}
+              >
+                <Text style={[styles.pickerButtonText, { color: colors.text, fontSize: responsive.isSmallPhone ? 12 : 14 }]}>{compareYear2}</Text>
+                <ChevronDown size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+            {showMonth2Picker && (
+              <View style={[styles.pickerDropdown, { backgroundColor: colors.glassBackgroundStrong }]}>
+                <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
+                  {months.map((m, idx) => (
+                    <TouchableOpacity 
+                      key={idx}
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        Haptics.selectionAsync();
+                        setCompareMonth2(idx);
+                        setShowMonth2Picker(false);
+                      }}
+                    >
+                      <Text style={[styles.pickerOptionText, { color: compareMonth2 === idx ? colors.tint : colors.text, fontSize: responsive.isSmallPhone ? 12 : 14 }]}>{m}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+            {showYear2Picker && (
+              <View style={[styles.pickerDropdown, { backgroundColor: colors.glassBackgroundStrong }]}>
+                <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
+                  {years.map((y) => (
+                    <TouchableOpacity 
+                      key={y}
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        Haptics.selectionAsync();
+                        setCompareYear2(y);
+                        setShowYear2Picker(false);
+                      }}
+                    >
+                      <Text style={[styles.pickerOptionText, { color: compareYear2 === y ? colors.tint : colors.text, fontSize: responsive.isSmallPhone ? 12 : 14 }]}>{y}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {(!data1?.hasMeals && !data2?.hasMeals) ? (
+          <View style={styles.noCompareDataContainer}>
+            <Text style={[styles.noCompareDataText, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 13 : 14 }]}>No available Data</Text>
+          </View>
+        ) : (
+          <View style={styles.compareCharts}>
+            <View style={styles.compareMetric}>
+              <Text style={[styles.compareMetricLabel, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 12 : 13 }]}>Calories (kcal)</Text>
+              <View style={styles.compareBarsRow}>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#EF4444',
+                          width: compareBar1Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data1 ? (data1.totalCalories / maxCalories) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data1?.hasMeals ? data1.totalCalories : 0}</Text>
+                </View>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#F97316',
+                          width: compareBar2Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data2 ? (data2.totalCalories / maxCalories) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data2?.hasMeals ? data2.totalCalories : 0}</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.compareMetric}>
+              <Text style={[styles.compareMetricLabel, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 12 : 13 }]}>Protein (g)</Text>
+              <View style={styles.compareBarsRow}>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#60A5FA',
+                          width: compareBar1Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data1 ? (data1.totalProtein / maxProtein) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data1?.hasMeals ? data1.totalProtein : 0}</Text>
+                </View>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#3B82F6',
+                          width: compareBar2Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data2 ? (data2.totalProtein / maxProtein) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data2?.hasMeals ? data2.totalProtein : 0}</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.compareMetric}>
+              <Text style={[styles.compareMetricLabel, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 12 : 13 }]}>Fats (g)</Text>
+              <View style={styles.compareBarsRow}>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#F87171',
+                          width: compareBar1Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data1 ? (data1.totalFats / maxFats) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data1?.hasMeals ? data1.totalFats : 0}</Text>
+                </View>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#EF4444',
+                          width: compareBar2Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data2 ? (data2.totalFats / maxFats) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data2?.hasMeals ? data2.totalFats : 0}</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.compareMetric}>
+              <Text style={[styles.compareMetricLabel, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 12 : 13 }]}>Fiber (g)</Text>
+              <View style={styles.compareBarsRow}>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#34D399',
+                          width: compareBar1Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data1 ? (data1.totalFiber / maxFiber) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data1?.hasMeals ? data1.totalFiber : 0}</Text>
+                </View>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#10B981',
+                          width: compareBar2Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data2 ? (data2.totalFiber / maxFiber) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data2?.hasMeals ? data2.totalFiber : 0}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+      </View>
     );
   };
 
@@ -1142,5 +1571,123 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     textAlign: 'center',
+  },
+  compareCard: {
+    marginTop: 16,
+  },
+  compareHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 16,
+  },
+  compareHeaderText: {
+    flex: 1,
+  },
+  compareTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  compareSubtitle: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  compareContent: {
+    gap: 20,
+  },
+  comparePickersRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  compareColumn: {
+    flex: 1,
+  },
+  compareColumnLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pickerButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderRadius: 8,
+    gap: 4,
+  },
+  pickerButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  pickerDropdown: {
+    position: 'absolute',
+    top: 70,
+    left: 0,
+    right: 0,
+    borderRadius: 8,
+    maxHeight: 200,
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  pickerScroll: {
+    maxHeight: 200,
+  },
+  pickerOption: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  pickerOptionText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  compareCharts: {
+    gap: 16,
+  },
+  compareMetric: {
+    gap: 8,
+  },
+  compareMetricLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  compareBarsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  compareBarContainer: {
+    flex: 1,
+    gap: 6,
+  },
+  compareBarBg: {
+    height: 28,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  compareBarFill: {
+    height: '100%',
+    borderRadius: 6,
+  },
+  compareBarValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  noCompareDataContainer: {
+    paddingVertical: 32,
+    alignItems: 'center',
+  },
+  noCompareDataText: {
+    fontSize: 14,
   },
 });
