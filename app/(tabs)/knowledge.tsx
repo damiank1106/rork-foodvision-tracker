@@ -1,12 +1,13 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, ListRenderItem } from 'react-native';
+import { StyleSheet, Text, View, FlatList, ListRenderItem, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { useTheme } from '@/context/ThemeContext';
 import { FOOD_TOPICS, VITAMINS, KnowledgeItem, VitaminItem } from '@/constants/knowledgeData';
 import { useFocusEffect } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { BookOpen } from 'lucide-react-native';
+import { BookOpen, Plus, Edit2, Trash2, Save, X } from 'lucide-react-native';
+import { useNotes, Note } from '@/context/NotesContext';
 
 
 interface SectionHeader {
@@ -17,11 +18,18 @@ interface SectionHeader {
 type ListItem = 
   | { type: 'food'; data: KnowledgeItem }
   | { type: 'vitamin'; data: VitaminItem }
+  | { type: 'note'; data: Note }
+  | { type: 'addNote' }
   | SectionHeader;
 
 export default function KnowledgeScreen() {
   const { colors } = useTheme();
+  const { notes, addNote, updateNote, deleteNote } = useNotes();
   const [animationKey, setAnimationKey] = React.useState(0);
+  const [editingNoteId, setEditingNoteId] = React.useState<string | null>(null);
+  const [showNewNote, setShowNewNote] = React.useState(false);
+  const [noteTitle, setNoteTitle] = React.useState('');
+  const [noteContent, setNoteContent] = React.useState('');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -34,7 +42,62 @@ export default function KnowledgeScreen() {
     ...FOOD_TOPICS.map(item => ({ type: 'food' as const, data: item })),
     { type: 'header', title: 'Complete Vitamin Guide' },
     ...VITAMINS.map(item => ({ type: 'vitamin' as const, data: item })),
+    { type: 'header', title: 'My Notes' },
+    { type: 'addNote' },
+    ...notes.map(item => ({ type: 'note' as const, data: item })),
   ];
+
+  const handleSaveNote = () => {
+    if (!noteTitle.trim()) {
+      Alert.alert('Error', 'Please enter a title');
+      return;
+    }
+    
+    if (editingNoteId) {
+      updateNote(editingNoteId, noteTitle, noteContent);
+      setEditingNoteId(null);
+    } else {
+      addNote(noteTitle, noteContent);
+      setShowNewNote(false);
+    }
+    
+    setNoteTitle('');
+    setNoteContent('');
+  };
+
+  const handleEditNote = (note: Note) => {
+    setEditingNoteId(note.id);
+    setNoteTitle(note.title);
+    setNoteContent(note.content);
+    setShowNewNote(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingNoteId(null);
+    setShowNewNote(false);
+    setNoteTitle('');
+    setNoteContent('');
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    Alert.alert(
+      'Delete Note',
+      'Are you sure you want to delete this note?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: () => {
+            deleteNote(noteId);
+            if (editingNoteId === noteId) {
+              handleCancelEdit();
+            }
+          }
+        },
+      ]
+    );
+  };
 
   const renderFoodItem = (item: KnowledgeItem, index: number) => (
     <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
@@ -80,6 +143,115 @@ export default function KnowledgeScreen() {
     </Animated.View>
   );
 
+  const renderAddNoteButton = () => (
+    <Animated.View entering={FadeInDown.delay(50).springify()}>
+      <TouchableOpacity
+        style={[styles.addButton, { borderColor: colors.primary }]}
+        onPress={() => {
+          setShowNewNote(true);
+          setEditingNoteId(null);
+          setNoteTitle('');
+          setNoteContent('');
+        }}
+      >
+        <Plus color={colors.primary} size={24} />
+        <Text style={[styles.addButtonText, { color: colors.primary }]}>Add New Note</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+
+  const renderNoteEditor = (isNew: boolean, note?: Note) => {
+    const isEditing = editingNoteId === note?.id || (isNew && showNewNote);
+    
+    if (!isEditing) return null;
+
+    return (
+      <Animated.View entering={FadeInDown.springify()}>
+        <GlassCard style={styles.noteEditorCard}>
+          <View style={styles.noteEditorHeader}>
+            <Text style={[styles.noteEditorTitle, { color: colors.text }]}>
+              {isNew ? 'New Note' : 'Edit Note'}
+            </Text>
+            <TouchableOpacity onPress={handleCancelEdit}>
+              <X color={colors.textSecondary} size={24} />
+            </TouchableOpacity>
+          </View>
+          
+          <TextInput
+            style={[styles.noteTitleInput, { 
+              color: colors.text, 
+              borderColor: colors.glassBorder,
+              backgroundColor: colors.glassBackground,
+            }]}
+            placeholder="Title"
+            placeholderTextColor={colors.textSecondary}
+            value={noteTitle}
+            onChangeText={setNoteTitle}
+          />
+          
+          <TextInput
+            style={[styles.noteContentInput, { 
+              color: colors.text,
+              borderColor: colors.glassBorder,
+              backgroundColor: colors.glassBackground,
+            }]}
+            placeholder="Notes"
+            placeholderTextColor={colors.textSecondary}
+            value={noteContent}
+            onChangeText={setNoteContent}
+            multiline
+            numberOfLines={6}
+            textAlignVertical="top"
+          />
+          
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: colors.primary }]}
+            onPress={handleSaveNote}
+          >
+            <Save color="#fff" size={20} />
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
+        </GlassCard>
+      </Animated.View>
+    );
+  };
+
+  const renderNoteItem = (note: Note, index: number) => {
+    if (editingNoteId === note.id) {
+      return renderNoteEditor(false, note);
+    }
+
+    return (
+      <Animated.View entering={FadeInDown.delay(index * 50).springify()}>
+        <GlassCard style={styles.card}>
+          <View style={styles.noteHeader}>
+            <Text style={[styles.noteTitle, { color: colors.text }]}>{note.title}</Text>
+            <View style={styles.noteActions}>
+              <TouchableOpacity
+                style={styles.noteActionButton}
+                onPress={() => handleEditNote(note)}
+              >
+                <Edit2 color={colors.primary} size={20} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.noteActionButton}
+                onPress={() => handleDeleteNote(note.id)}
+              >
+                <Trash2 color={colors.error} size={20} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          {note.content ? (
+            <Text style={[styles.noteContent, { color: colors.textSecondary }]}>
+              {note.content}
+            </Text>
+          ) : null}
+        </GlassCard>
+      </Animated.View>
+    );
+  };
+
   const renderItem: ListRenderItem<ListItem> = ({ item, index }) => {
     if (item.type === 'header') {
       return (
@@ -90,11 +262,24 @@ export default function KnowledgeScreen() {
     }
     
     if (item.type === 'food') {
-      return renderFoodItem(item.data, index % 20); // Reset delay for batches mostly
+      return renderFoodItem(item.data, index % 20);
     }
     
     if (item.type === 'vitamin') {
       return renderVitaminItem(item.data, index % 20);
+    }
+
+    if (item.type === 'addNote') {
+      return (
+        <>
+          {renderAddNoteButton()}
+          {showNewNote && renderNoteEditor(true)}
+        </>
+      );
+    }
+
+    if (item.type === 'note') {
+      return renderNoteItem(item.data, index % 20);
     }
     
     return null;
@@ -212,5 +397,86 @@ const styles = StyleSheet.create({
   bodyText: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderWidth: 2,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    marginBottom: 16,
+  },
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  noteEditorCard: {
+    marginBottom: 16,
+    padding: 16,
+  },
+  noteEditorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  noteEditorTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  noteTitleInput: {
+    fontSize: 17,
+    fontWeight: '600',
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  noteContentInput: {
+    fontSize: 15,
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 16,
+    minHeight: 120,
+  },
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 14,
+    borderRadius: 8,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  noteHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  noteTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    flex: 1,
+    marginRight: 12,
+  },
+  noteActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  noteActionButton: {
+    padding: 4,
+  },
+  noteContent: {
+    fontSize: 15,
+    lineHeight: 22,
   },
 });

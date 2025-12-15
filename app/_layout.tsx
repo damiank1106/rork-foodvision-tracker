@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { initMealsDb } from "@/services/mealsDb";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { ProfileProvider } from "@/context/ProfileContext";
+import { NotesContext } from "@/context/NotesContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -54,10 +55,12 @@ function RootLayoutInner() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
-        <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-        <RootLayoutNav />
-      </GestureHandlerRootView>
+      <NotesContext>
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+          <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+          <RootLayoutNav />
+        </GestureHandlerRootView>
+      </NotesContext>
     </QueryClientProvider>
   );
 }
