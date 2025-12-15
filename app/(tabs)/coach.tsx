@@ -128,11 +128,11 @@ export default function CoachScreen() {
       
       setMessages(prev => [...prev, aiMsg]);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {
+    } catch (error: any) {
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'assistant',
-        text: "Sorry, I couldn't respond. Please check your internet connection or API key and try again.",
+        text: error.message || "Sorry, I couldn't respond. Please check your internet connection or API key and try again.",
         createdAt: Date.now(),
       };
       setMessages(prev => [...prev, errorMsg]);

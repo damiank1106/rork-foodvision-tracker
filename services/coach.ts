@@ -2,6 +2,8 @@ import { getStoredDeepSeekKey } from '@/hooks/useSettings';
 import { getAllMeals } from '@/services/mealsDb';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { Platform } from 'react-native';
+
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'assistant';
@@ -64,6 +66,7 @@ ${mealsContext}`
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
         model: 'deepseek-chat',
@@ -75,14 +78,25 @@ ${mealsContext}`
     if (!response.ok) {
       const errorText = await response.text();
       console.error('DeepSeek API Error (Coach):', response.status, errorText);
-      throw new Error(`DeepSeek API request failed with status ${response.status}`);
+      throw new Error(`DeepSeek API request failed with status ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
     return data.choices[0].message.content || "I couldn't generate a response.";
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in sendCoachMessage:', error);
+    
+    // Handle Web CORS specific error
+    if (Platform.OS === 'web' && error instanceof TypeError && error.message === 'Load failed') {
+      throw new Error('AI Chat is not available in the web preview due to browser security restrictions (CORS). Please test this feature on a mobile device.');
+    }
+    
+    // Handle generic network errors
+    if (error instanceof TypeError && error.message === 'Load failed') {
+      throw new Error('Network request failed. Please check your internet connection.');
+    }
+
     throw error;
   }
 }
