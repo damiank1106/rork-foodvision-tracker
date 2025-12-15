@@ -10,6 +10,7 @@ export interface UserProfile {
   sex: "male" | "female" | "other" | null;
   heightCm: number | null;
   weightKg: number | null;
+  heightUnit: 'cm' | 'ft';
   activityLevel: ActivityLevel;
   goal: GoalType;
   calorieTarget: number;    // daily kcal target
@@ -27,6 +28,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   sex: null,
   heightCm: null,
   weightKg: null,
+  heightUnit: 'cm',
   activityLevel: 'moderate',
   goal: 'maintain',
   calorieTarget: 2000,

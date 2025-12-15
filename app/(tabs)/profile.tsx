@@ -11,6 +11,25 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { useFocusEffect } from 'expo-router';
 
+const cmToFtIn = (cm: number | null) => {
+  if (!cm) return { ft: '', in: '' };
+  const totalInches = cm / 2.54;
+  const ft = Math.floor(totalInches / 12);
+  const inches = Math.round(totalInches % 12);
+  // Handle case where rounding up inches results in 12 (e.g. 5'11.9 -> 5'12 -> 6'0)
+  if (inches === 12) {
+    return { ft: (ft + 1).toString(), in: '0' };
+  }
+  return { ft: ft.toString(), in: inches.toString() };
+};
+
+const ftInToCm = (ftStr: string, inStr: string) => {
+  const ft = parseInt(ftStr) || 0;
+  const inches = parseInt(inStr) || 0;
+  if (ft === 0 && inches === 0) return null;
+  return Math.round((ft * 12 + inches) * 2.54);
+};
+
 export default function ProfileScreen() {
   const { 
     apiKey, 
@@ -195,15 +214,67 @@ export default function ProfileScreen() {
                   />
                 </View>
                 <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
-                  <Text style={[styles.label, { color: colors.textSecondary }]}>Height (cm)</Text>
-                  <TextInput
-                    style={[styles.input, { color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
-                    value={profile?.heightCm?.toString() || ''}
-                    onChangeText={(t) => handleUpdateProfile('heightCm', parseInt(t) || null)}
-                    placeholder="175"
-                    keyboardType="numeric"
-                    placeholderTextColor={colors.textSecondary}
-                  />
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 0 }]}>Height</Text>
+                    <View style={styles.unitToggle}>
+                      <TouchableOpacity 
+                        onPress={() => handleUpdateProfile('heightUnit', 'cm')}
+                        style={[styles.unitButton, (profile?.heightUnit || 'cm') === 'cm' && { backgroundColor: colors.tint }]}
+                      >
+                        <Text style={[styles.unitText, (profile?.heightUnit || 'cm') === 'cm' ? { color: '#FFF' } : { color: colors.textSecondary }]}>CM</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        onPress={() => handleUpdateProfile('heightUnit', 'ft')}
+                        style={[styles.unitButton, profile?.heightUnit === 'ft' && { backgroundColor: colors.tint }]}
+                      >
+                        <Text style={[styles.unitText, profile?.heightUnit === 'ft' ? { color: '#FFF' } : { color: colors.textSecondary }]}>FT</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  
+                  {profile?.heightUnit === 'ft' ? (
+                    <View style={[styles.row, { marginBottom: 0 }]}>
+                      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                         <TextInput
+                           style={[styles.input, { flex: 1, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                           value={cmToFtIn(profile?.heightCm).ft}
+                           onChangeText={(t) => {
+                              const currentIn = cmToFtIn(profile?.heightCm).in;
+                              const newCm = ftInToCm(t, currentIn);
+                              handleUpdateProfile('heightCm', newCm);
+                           }}
+                           placeholder="5"
+                           keyboardType="numeric"
+                           placeholderTextColor={colors.textSecondary}
+                         />
+                         <Text style={{ color: colors.textSecondary, marginLeft: 4, marginRight: 8, fontSize: 16 }}>&apos;</Text>
+                      </View>
+                      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                         <TextInput
+                           style={[styles.input, { flex: 1, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                           value={cmToFtIn(profile?.heightCm).in}
+                           onChangeText={(t) => {
+                              const currentFt = cmToFtIn(profile?.heightCm).ft;
+                              const newCm = ftInToCm(currentFt, t);
+                              handleUpdateProfile('heightCm', newCm);
+                           }}
+                           placeholder="10"
+                           keyboardType="numeric"
+                           placeholderTextColor={colors.textSecondary}
+                         />
+                         <Text style={{ color: colors.textSecondary, marginLeft: 4, fontSize: 16 }}>&quot;</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <TextInput
+                      style={[styles.input, { color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                      value={profile?.heightCm?.toString() || ''}
+                      onChangeText={(t) => handleUpdateProfile('heightCm', parseInt(t) || null)}
+                      placeholder="175"
+                      keyboardType="numeric"
+                      placeholderTextColor={colors.textSecondary}
+                    />
+                  )}
                 </View>
               </View>
 
@@ -462,7 +533,29 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
+  },
+  unitToggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  unitButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  unitText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   row: {
     flexDirection: 'row',
