@@ -233,8 +233,8 @@ export default function ProfileScreen() {
                   </View>
                   
                   {profile?.heightUnit === 'ft' ? (
-                    <View style={[styles.row, { marginBottom: 0, justifyContent: 'flex-start', gap: 8 }]}>
-                      <View style={{ width: 58, flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={[styles.row, { marginBottom: 0, justifyContent: 'flex-start', gap: 6 }]}>
+                      <View style={{ width: 48, flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
                            style={[styles.input, { flex: 1, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).ft}
@@ -247,9 +247,9 @@ export default function ProfileScreen() {
                            keyboardType="numeric"
                            placeholderTextColor={colors.textSecondary}
                          />
-                         <Text style={{ color: colors.text, marginLeft: 4, fontSize: 16, fontWeight: '600' }}>&apos;</Text>
+                         <Text style={{ color: colors.text, marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&apos;</Text>
                       </View>
-                      <View style={{ width: 58, flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ width: 48, flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
                            style={[styles.input, { flex: 1, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).in}
@@ -262,7 +262,7 @@ export default function ProfileScreen() {
                            keyboardType="numeric"
                            placeholderTextColor={colors.textSecondary}
                          />
-                         <Text style={{ color: colors.text, marginLeft: 4, fontSize: 16, fontWeight: '600' }}>&quot;</Text>
+                         <Text style={{ color: colors.text, marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&quot;</Text>
                       </View>
                     </View>
                   ) : (
