@@ -47,12 +47,23 @@ export default function ProfileScreen() {
   const [isDeepSeekKeySaved, setIsDeepSeekKeySaved] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
+  
+  const [tempFt, setTempFt] = useState('');
+  const [tempIn, setTempIn] = useState('');
 
   useFocusEffect(
     React.useCallback(() => {
       setAnimationKey(prev => prev + 1);
     }, [])
   );
+
+  useEffect(() => {
+    if (profile?.heightUnit === 'ft' && profile?.heightCm) {
+      const { ft, in: inches } = cmToFtIn(profile.heightCm);
+      setTempFt(ft);
+      setTempIn(inches);
+    }
+  }, [profile?.heightCm, profile?.heightUnit]);
 
   // Profile handling via Context
   // const [isProfileSaving, setIsProfileSaving] = useState(false);
@@ -109,6 +120,31 @@ export default function ProfileScreen() {
 
   const handleUpdateProfile = (key: keyof typeof profile, value: any) => {
     updateProfile({ ...profile, [key]: value });
+  };
+
+  const handleHeightUnitChange = (unit: 'cm' | 'ft') => {
+    if (unit === 'ft' && profile?.heightCm) {
+      const { ft, in: inches } = cmToFtIn(profile.heightCm);
+      setTempFt(ft);
+      setTempIn(inches);
+    }
+    handleUpdateProfile('heightUnit', unit);
+  };
+
+  const handleFtChange = (value: string) => {
+    setTempFt(value);
+    if (value && tempIn) {
+      const newCm = ftInToCm(value, tempIn);
+      handleUpdateProfile('heightCm', newCm);
+    }
+  };
+
+  const handleInChange = (value: string) => {
+    setTempIn(value);
+    if (tempFt && value) {
+      const newCm = ftInToCm(tempFt, value);
+      handleUpdateProfile('heightCm', newCm);
+    }
   };
 
   const renderRadio = (label: string, value: string, currentValue: string | null, onSelect: (val: any) => void) => (
@@ -205,7 +241,7 @@ export default function ProfileScreen() {
                 <View style={[styles.formGroup, { width: 80, marginRight: 16 }]}>
                   <Text style={[styles.label, { color: colors.textSecondary }]}>Age</Text>
                   <TextInput
-                    style={[styles.input, { textAlign: 'center', color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                    style={[styles.input, { textAlign: 'center', color: theme === 'dark' ? '#FFF' : '#000', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                     value={profile?.age?.toString() || ''}
                     onChangeText={(t) => handleUpdateProfile('age', parseInt(t) || null)}
                     placeholder="25"
@@ -218,13 +254,13 @@ export default function ProfileScreen() {
                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 0 }]}>Height</Text>
                     <View style={styles.unitToggle}>
                       <TouchableOpacity 
-                        onPress={() => handleUpdateProfile('heightUnit', 'cm')}
+                        onPress={() => handleHeightUnitChange('cm')}
                         style={[styles.unitButton, (profile?.heightUnit || 'cm') === 'cm' && { backgroundColor: colors.tint }]}
                       >
                         <Text style={[styles.unitText, (profile?.heightUnit || 'cm') === 'cm' ? { color: '#FFF' } : { color: colors.textSecondary }]}>CM</Text>
                       </TouchableOpacity>
                       <TouchableOpacity 
-                        onPress={() => handleUpdateProfile('heightUnit', 'ft')}
+                        onPress={() => handleHeightUnitChange('ft')}
                         style={[styles.unitButton, profile?.heightUnit === 'ft' && { backgroundColor: colors.tint }]}
                       >
                         <Text style={[styles.unitText, profile?.heightUnit === 'ft' ? { color: '#FFF' } : { color: colors.textSecondary }]}>FT</Text>
@@ -233,43 +269,35 @@ export default function ProfileScreen() {
                   </View>
                   
                   {profile?.heightUnit === 'ft' ? (
-                    <View style={[styles.row, { marginBottom: 0, justifyContent: 'flex-start', gap: 6 }]}>
+                    <View style={[styles.row, { marginBottom: 0, justifyContent: 'flex-start', gap: 6, marginTop: 8 }]}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
-                           style={[styles.input, { width: 44, marginBottom: 0, textAlign: 'center', color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
-                           value={cmToFtIn(profile?.heightCm).ft}
-                           onChangeText={(t) => {
-                              const currentIn = cmToFtIn(profile?.heightCm).in;
-                              const newCm = ftInToCm(t, currentIn);
-                              handleUpdateProfile('heightCm', newCm);
-                           }}
+                           style={[styles.input, { width: 46, marginBottom: 0, textAlign: 'center', color: theme === 'dark' ? '#FFF' : '#000', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                           value={tempFt}
+                           onChangeText={handleFtChange}
                            placeholder="5"
                            keyboardType="numeric"
                            placeholderTextColor={colors.textSecondary}
                            maxLength={1}
                          />
-                         <Text style={{ color: '#FFF', marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&apos;</Text>
+                         <Text style={{ color: theme === 'dark' ? '#FFF' : '#000', marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&apos;</Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
-                           style={[styles.input, { width: 50, marginBottom: 0, textAlign: 'center', color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
-                           value={cmToFtIn(profile?.heightCm).in}
-                           onChangeText={(t) => {
-                              const currentFt = cmToFtIn(profile?.heightCm).ft;
-                              const newCm = ftInToCm(currentFt, t);
-                              handleUpdateProfile('heightCm', newCm);
-                           }}
+                           style={[styles.input, { width: 52, marginBottom: 0, textAlign: 'center', color: theme === 'dark' ? '#FFF' : '#000', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                           value={tempIn}
+                           onChangeText={handleInChange}
                            placeholder="10"
                            keyboardType="numeric"
                            placeholderTextColor={colors.textSecondary}
                            maxLength={2}
                          />
-                         <Text style={{ color: '#FFF', marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&quot;</Text>
+                         <Text style={{ color: theme === 'dark' ? '#FFF' : '#000', marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&quot;</Text>
                       </View>
                     </View>
                   ) : (
                     <TextInput
-                      style={[styles.input, { width: 120, textAlign: 'center', color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                      style={[styles.input, { width: 120, textAlign: 'center', color: theme === 'dark' ? '#FFF' : '#000', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                       value={profile?.heightCm?.toString() || ''}
                       onChangeText={(t) => handleUpdateProfile('heightCm', parseInt(t) || null)}
                       placeholder="175"
@@ -283,7 +311,7 @@ export default function ProfileScreen() {
               <View style={styles.formGroup}>
                 <Text style={[styles.label, { color: colors.textSecondary }]}>Weight (kg)</Text>
                 <TextInput
-                  style={[styles.input, { color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                  style={[styles.input, { color: theme === 'dark' ? '#FFF' : '#000', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                   value={profile?.weightKg?.toString() || ''}
                   onChangeText={(t) => handleUpdateProfile('weightKg', parseInt(t) || null)}
                   placeholder="70"
