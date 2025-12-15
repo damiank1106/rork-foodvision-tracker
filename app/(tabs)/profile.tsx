@@ -236,7 +236,7 @@ export default function ProfileScreen() {
                     <View style={[styles.row, { marginBottom: 0, justifyContent: 'flex-start', gap: 6 }]}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
-                           style={[styles.input, { width: 40, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                           style={[styles.input, { width: 44, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).ft}
                            onChangeText={(t) => {
                               const currentIn = cmToFtIn(profile?.heightCm).in;
