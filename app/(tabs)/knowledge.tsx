@@ -30,6 +30,7 @@ export default function KnowledgeScreen() {
   const [showNewNote, setShowNewNote] = React.useState(false);
   const [noteTitle, setNoteTitle] = React.useState('');
   const [noteContent, setNoteContent] = React.useState('');
+  const flatListRef = React.useRef<FlatList>(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -70,6 +71,19 @@ export default function KnowledgeScreen() {
     setNoteTitle(note.title);
     setNoteContent(note.content);
     setShowNewNote(false);
+    
+    setTimeout(() => {
+      const noteIndex = data.findIndex(item => 
+        item.type === 'note' && item.data.id === note.id
+      );
+      if (noteIndex !== -1 && flatListRef.current) {
+        flatListRef.current.scrollToIndex({
+          index: noteIndex,
+          animated: true,
+          viewPosition: 0.1,
+        });
+      }
+    }, 100);
   };
 
   const handleCancelEdit = () => {
@@ -152,6 +166,19 @@ export default function KnowledgeScreen() {
           setEditingNoteId(null);
           setNoteTitle('');
           setNoteContent('');
+          
+          setTimeout(() => {
+            const notesHeaderIndex = data.findIndex(item => 
+              item.type === 'header' && item.title === 'My Notes'
+            );
+            if (notesHeaderIndex !== -1 && flatListRef.current) {
+              flatListRef.current.scrollToIndex({
+                index: notesHeaderIndex,
+                animated: true,
+                viewPosition: 0.1,
+              });
+            }
+          }, 100);
         }}
       >
         <Plus color={colors.primary} size={24} />
@@ -297,6 +324,7 @@ export default function KnowledgeScreen() {
            <Text style={[styles.screenTitle, { color: colors.text }]}>Knowledge Center</Text>
         </Animated.View>
         <FlatList
+          ref={flatListRef}
           key={`knowledge-list-${animationKey}`}
           data={data}
           renderItem={renderItem}
@@ -304,10 +332,20 @@ export default function KnowledgeScreen() {
             if (item.type === 'header') return `header-${index}`;
             if (item.type === 'food') return `food-${item.data.id}`;
             if (item.type === 'vitamin') return `vit-${item.data.id}`;
+            if (item.type === 'note') return `note-${item.data.id}`;
+            if (item.type === 'addNote') return 'addNote';
             return `item-${index}`;
           }}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          onScrollToIndexFailed={(info) => {
+            const wait = new Promise(resolve => setTimeout(resolve, 100));
+            wait.then(() => {
+              flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.1 });
+            });
+          }}
         />
       </View>
     </ScreenWrapper>
@@ -332,7 +370,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 20,
-    paddingBottom: 100, // Space for tab bar
+    paddingBottom: 400,
   },
   headerContainer: {
     marginTop: 20,
