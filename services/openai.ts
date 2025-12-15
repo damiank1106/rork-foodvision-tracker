@@ -14,7 +14,7 @@ export interface MealAnalysisResult {
   badPoints: string[];
 }
 
-export async function analyzeMealWithOpenAi(imageUri: string): Promise<MealAnalysisResult> {
+export async function analyzeMealWithOpenAi(imageUri: string, contextText?: string): Promise<MealAnalysisResult> {
   const apiKey = await getStoredOpenAiKey();
   if (!apiKey) {
     throw new Error('OpenAI API key not found. Please add it in Settings first.');
@@ -25,23 +25,29 @@ export async function analyzeMealWithOpenAi(imageUri: string): Promise<MealAnaly
       encoding: 'base64',
     });
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+    const userContent: any[] = [
+      {
+        type: 'image_url',
+        image_url: {
+          url: `data:image/jpeg;base64,${base64Image}`,
+        },
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini', // Using gpt-4o-mini as a cost-effective vision model
-        messages: [
-          {
-            role: 'system',
-            content: `You are a nutrition assistant. I will give you a food photo.
+    ];
+
+    if (contextText) {
+      userContent.push({
+        type: 'text',
+        text: `Additional context from user: ${contextText}`,
+      });
+    }
+
+    const systemPrompt = `You are a nutrition assistant. I will give you a food photo${contextText ? ' and additional context about the meal' : ''}.
 1. Guess the name of the dish.
 2. Describe the likely ingredients in one short paragraph.
 3. Estimate total calories and grams of protein, carbs, fat and fiber. Use reasonable ranges.
-4. List 2–5 ‘good points’ (health benefits).
-5. List 2–5 ‘bad points’ or concerns (e.g. high sodium, high sugar, high saturated fat).
+4. List 2–5 'good points' (health benefits).
+5. List 2–5 'bad points' or concerns (e.g. high sodium, high sugar, high saturated fat).
+${contextText ? 'Take the user-provided context into account for better accuracy.' : ''}
 Please respond in JSON with this exact shape:
 {
   "dishName": string,
@@ -54,18 +60,24 @@ Please respond in JSON with this exact shape:
   "fiberGrams": number,
   "goodPoints": string[],
   "badPoints": string[]
-}`
+}`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
           },
           {
             role: 'user',
-            content: [
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`,
-                },
-              },
-            ],
+            content: userContent,
           },
         ],
         response_format: { type: "json_object" },

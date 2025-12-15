@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Text, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Text, Alert, ActivityIndicator, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { X } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
@@ -23,6 +23,8 @@ export default function PhotoPreviewScreen() {
   const [result, setResult] = useState<MealAnalysisResult | null>(null);
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [contextText, setContextText] = useState('');
+  const [showContextModal, setShowContextModal] = useState(false);
 
   useEffect(() => {
     checkApiKey();
@@ -53,7 +55,7 @@ export default function PhotoPreviewScreen() {
     setResult(null);
 
     try {
-      const analysis = await analyzeMealWithOpenAi(imageUri);
+      const analysis = await analyzeMealWithOpenAi(imageUri, contextText || undefined);
       setResult(analysis);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
@@ -132,7 +134,7 @@ export default function PhotoPreviewScreen() {
              style={[styles.closeButton]} 
              onPress={() => router.navigate('/(tabs)' as any)}
            >
-             <X size={32} color="#FFF" />
+             <X size={28} color="#FFF" />
            </TouchableOpacity>
 
           <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -153,6 +155,17 @@ export default function PhotoPreviewScreen() {
                         title="Analyze with OpenAI Vision" 
                         onPress={handleAnalyze} 
                         style={styles.analyzeButton}
+                      />
+                    </Animated.View>
+                    <Animated.View entering={FadeInUp.delay(125).springify()}>
+                      <GlassButton 
+                        title={contextText ? "Edit Context / Corrections" : "Add Context / Corrections"}
+                        variant="secondary"
+                        onPress={() => {
+                          Haptics.selectionAsync();
+                          setShowContextModal(true);
+                        }} 
+                        style={styles.contextButton}
                       />
                     </Animated.View>
                     <Animated.View entering={FadeInUp.delay(150).springify()}>
@@ -238,6 +251,59 @@ export default function PhotoPreviewScreen() {
           </ScrollView>
         </SafeAreaView>
       </View>
+
+      {/* Context Modal */}
+      <Modal
+        visible={showContextModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowContextModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <SafeAreaView style={styles.modalSafeArea}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Add Context / Corrections</Text>
+                <TouchableOpacity onPress={() => setShowContextModal(false)}>
+                  <X size={24} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+              <Text style={[styles.modalDescription, { color: colors.textSecondary }]}>
+                Provide additional information about this meal for better accuracy (e.g., &ldquo;This dish contains chicken, not beef or pork&rdquo;)
+              </Text>
+              <TextInput
+                style={[styles.textInput, { color: colors.text, borderColor: colors.tint }]}
+                placeholder="Example: Contains chicken, no beef. Low-sodium version."
+                placeholderTextColor={colors.textSecondary}
+                value={contextText}
+                onChangeText={setContextText}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+              <View style={styles.modalButtons}>
+                <GlassButton
+                  title="Clear"
+                  variant="secondary"
+                  onPress={() => {
+                    setContextText('');
+                    Haptics.selectionAsync();
+                  }}
+                  style={styles.clearButton}
+                />
+                <GlassButton
+                  title="Save"
+                  onPress={() => {
+                    setShowContextModal(false);
+                    Haptics.selectionAsync();
+                  }}
+                  style={styles.saveContextButton}
+                />
+              </View>
+            </View>
+          </SafeAreaView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -340,7 +406,7 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 20,
+    top: 50,
     right: 20,
     width: 44,
     height: 44,
@@ -349,5 +415,63 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 20,
+  },
+  contextButton: {
+    marginBottom: 0,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalSafeArea: {
+    width: '100%',
+    maxWidth: 500,
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    backgroundColor: 'rgba(30,30,30,0.98)',
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  modalDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  textInput: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    minHeight: 120,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  clearButton: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  saveContextButton: {
+    flex: 1,
+    marginBottom: 0,
   }
 });
