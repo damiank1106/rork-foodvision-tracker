@@ -86,6 +86,7 @@ export default function StatsScreen() {
   const { width, height } = useWindowDimensions();
   
   const responsive = getResponsiveSizes(width, height);
+  const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<DayData[]>([]);
@@ -116,6 +117,74 @@ export default function StatsScreen() {
   useEffect(() => {
     currentDateRef.current = currentDate;
   }, [currentDate]);
+
+  const getMonthCompareData = async (year: number, month: number): Promise<CompareMonthData> => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    lastDay.setHours(23, 59, 59, 999);
+    
+    const meals = await getMealsByDateRange(firstDay.toISOString(), lastDay.toISOString());
+    
+    if (meals.length === 0) {
+      return {
+        month,
+        year,
+        totalCalories: 0,
+        totalProtein: 0,
+        totalCarbs: 0,
+        totalFats: 0,
+        totalFiber: 0,
+        hasMeals: false,
+      };
+    }
+    
+    const totals = meals.reduce((acc, meal) => ({
+      totalCalories: acc.totalCalories + meal.caloriesEstimate,
+      totalProtein: acc.totalProtein + meal.proteinGrams,
+      totalCarbs: acc.totalCarbs + meal.carbsGrams,
+      totalFats: acc.totalFats + meal.fatGrams,
+      totalFiber: acc.totalFiber + meal.fiberGrams,
+    }), { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFats: 0, totalFiber: 0 });
+    
+    return {
+      month,
+      year,
+      totalCalories: Math.round(totals.totalCalories),
+      totalProtein: Math.round(totals.totalProtein),
+      totalCarbs: Math.round(totals.totalCarbs),
+      totalFats: Math.round(totals.totalFats),
+      totalFiber: Math.round(totals.totalFiber),
+      hasMeals: true,
+    };
+  };
+
+  const loadCompareData = useCallback(async () => {
+    try {
+      const data1 = await getMonthCompareData(compareYear1, compareMonth1);
+      const data2 = await getMonthCompareData(compareYear2, compareMonth2);
+      setCompareData({ month1: data1, month2: data2 });
+      
+      compareBar1Anim.setValue(0);
+      compareBar2Anim.setValue(0);
+      
+      RNAnimated.parallel([
+        RNAnimated.spring(compareBar1Anim, {
+          toValue: 1,
+          useNativeDriver: false,
+          tension: 40,
+          friction: 7,
+        }),
+        RNAnimated.spring(compareBar2Anim, {
+          toValue: 1,
+          useNativeDriver: false,
+          tension: 40,
+          friction: 7,
+        }),
+      ]).start();
+    } catch (e) {
+      console.error('Error loading compare data:', e);
+    }
+  }, [compareYear1, compareMonth1, compareYear2, compareMonth2, compareBar1Anim, compareBar2Anim]);
 
   const loadMonthData = useCallback(async (date: Date, animate: boolean = true) => {
     if (animate) {
@@ -281,12 +350,17 @@ export default function StatsScreen() {
     useCallback(() => {
       console.log('StatsScreen focused, starting animations and loading data');
       
+      setIsLoading(true);
       titleFadeAnim.setValue(0);
       calendarFadeAnim.setValue(0);
       detailsFadeAnim.setValue(0);
       summaryFadeAnim.setValue(0);
       
-      loadMonthData(currentDateRef.current, false).then(() => {
+      Promise.all([
+        loadMonthData(currentDateRef.current, false),
+        loadCompareData(),
+      ]).then(() => {
+        setIsLoading(false);
         RNAnimated.stagger(100, [
           RNAnimated.timing(titleFadeAnim, {
             toValue: 1,
@@ -309,8 +383,11 @@ export default function StatsScreen() {
             useNativeDriver: true,
           }),
         ]).start();
+      }).catch((error) => {
+        console.error('Error loading stats data:', error);
+        setIsLoading(false);
       });
-    }, [loadMonthData, titleFadeAnim, calendarFadeAnim, detailsFadeAnim, summaryFadeAnim])
+    }, [loadMonthData, loadCompareData, titleFadeAnim, calendarFadeAnim, detailsFadeAnim, summaryFadeAnim])
   );
 
   useEffect(() => {
@@ -789,74 +866,6 @@ export default function StatsScreen() {
     );
   };
 
-  const getMonthCompareData = async (year: number, month: number): Promise<CompareMonthData> => {
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    lastDay.setHours(23, 59, 59, 999);
-    
-    const meals = await getMealsByDateRange(firstDay.toISOString(), lastDay.toISOString());
-    
-    if (meals.length === 0) {
-      return {
-        month,
-        year,
-        totalCalories: 0,
-        totalProtein: 0,
-        totalCarbs: 0,
-        totalFats: 0,
-        totalFiber: 0,
-        hasMeals: false,
-      };
-    }
-    
-    const totals = meals.reduce((acc, meal) => ({
-      totalCalories: acc.totalCalories + meal.caloriesEstimate,
-      totalProtein: acc.totalProtein + meal.proteinGrams,
-      totalCarbs: acc.totalCarbs + meal.carbsGrams,
-      totalFats: acc.totalFats + meal.fatGrams,
-      totalFiber: acc.totalFiber + meal.fiberGrams,
-    }), { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFats: 0, totalFiber: 0 });
-    
-    return {
-      month,
-      year,
-      totalCalories: Math.round(totals.totalCalories),
-      totalProtein: Math.round(totals.totalProtein),
-      totalCarbs: Math.round(totals.totalCarbs),
-      totalFats: Math.round(totals.totalFats),
-      totalFiber: Math.round(totals.totalFiber),
-      hasMeals: true,
-    };
-  };
-
-  const loadCompareData = useCallback(async () => {
-    try {
-      const data1 = await getMonthCompareData(compareYear1, compareMonth1);
-      const data2 = await getMonthCompareData(compareYear2, compareMonth2);
-      setCompareData({ month1: data1, month2: data2 });
-      
-      compareBar1Anim.setValue(0);
-      compareBar2Anim.setValue(0);
-      
-      RNAnimated.parallel([
-        RNAnimated.spring(compareBar1Anim, {
-          toValue: 1,
-          useNativeDriver: false,
-          tension: 40,
-          friction: 7,
-        }),
-        RNAnimated.spring(compareBar2Anim, {
-          toValue: 1,
-          useNativeDriver: false,
-          tension: 40,
-          friction: 7,
-        }),
-      ]).start();
-    } catch (e) {
-      console.error('Error loading compare data:', e);
-    }
-  }, [compareYear1, compareMonth1, compareYear2, compareMonth2, compareBar1Anim, compareBar2Anim]);
-
   useEffect(() => {
     loadCompareData();
   }, [loadCompareData]);
@@ -1224,6 +1233,16 @@ export default function StatsScreen() {
   };
 
   const hasValidDimensions = width > 0 && height > 0;
+
+  if (isLoading) {
+    return (
+      <ScreenWrapper>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: colors.text, fontSize: responsive.isTablet ? 20 : 18 }]}>Loading All Data. Please wait…</Text>
+        </View>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper>
@@ -1728,5 +1747,16 @@ const styles = StyleSheet.create({
   },
   noCompareDataText: {
     fontSize: 14,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
