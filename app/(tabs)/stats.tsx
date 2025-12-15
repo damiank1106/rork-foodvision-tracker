@@ -74,6 +74,7 @@ interface CompareMonthData {
   year: number;
   totalCalories: number;
   totalProtein: number;
+  totalCarbs: number;
   totalFats: number;
   totalFiber: number;
   hasMeals: boolean;
@@ -801,6 +802,7 @@ export default function StatsScreen() {
         year,
         totalCalories: 0,
         totalProtein: 0,
+        totalCarbs: 0,
         totalFats: 0,
         totalFiber: 0,
         hasMeals: false,
@@ -810,15 +812,17 @@ export default function StatsScreen() {
     const totals = meals.reduce((acc, meal) => ({
       totalCalories: acc.totalCalories + meal.caloriesEstimate,
       totalProtein: acc.totalProtein + meal.proteinGrams,
+      totalCarbs: acc.totalCarbs + meal.carbsGrams,
       totalFats: acc.totalFats + meal.fatGrams,
       totalFiber: acc.totalFiber + meal.fiberGrams,
-    }), { totalCalories: 0, totalProtein: 0, totalFats: 0, totalFiber: 0 });
+    }), { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFats: 0, totalFiber: 0 });
     
     return {
       month,
       year,
       totalCalories: Math.round(totals.totalCalories),
       totalProtein: Math.round(totals.totalProtein),
+      totalCarbs: Math.round(totals.totalCarbs),
       totalFats: Math.round(totals.totalFats),
       totalFiber: Math.round(totals.totalFiber),
       hasMeals: true,
@@ -866,6 +870,7 @@ export default function StatsScreen() {
     
     const maxCalories = data1 && data2 ? Math.max(data1.totalCalories, data2.totalCalories, 1) : 1;
     const maxProtein = data1 && data2 ? Math.max(data1.totalProtein, data2.totalProtein, 1) : 1;
+    const maxCarbs = data1 && data2 ? Math.max(data1.totalCarbs, data2.totalCarbs, 1) : 1;
     const maxFats = data1 && data2 ? Math.max(data1.totalFats, data2.totalFats, 1) : 1;
     const maxFiber = data1 && data2 ? Math.max(data1.totalFiber, data2.totalFiber, 1) : 1;
     
@@ -1013,12 +1018,7 @@ export default function StatsScreen() {
           </View>
         </View>
 
-        {(!data1?.hasMeals && !data2?.hasMeals) ? (
-          <View style={styles.noCompareDataContainer}>
-            <Text style={[styles.noCompareDataText, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 13 : 14 }]}>No available Data</Text>
-          </View>
-        ) : (
-          <View style={styles.compareCharts}>
+        <View style={styles.compareCharts}>
             <View style={styles.compareMetric}>
               <Text style={[styles.compareMetricLabel, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 12 : 13 }]}>Calories (kcal)</Text>
               <View style={styles.compareBarsRow}>
@@ -1095,6 +1095,46 @@ export default function StatsScreen() {
                     />
                   </View>
                   <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data2?.hasMeals ? data2.totalProtein : 0}</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.compareMetric}>
+              <Text style={[styles.compareMetricLabel, { color: colors.textSecondary, fontSize: responsive.isSmallPhone ? 12 : 13 }]}>Carbs (g)</Text>
+              <View style={styles.compareBarsRow}>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#FBBF24',
+                          width: compareBar1Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data1 ? (data1.totalCarbs / maxCarbs) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data1?.hasMeals ? data1.totalCarbs : 0}</Text>
+                </View>
+                <View style={styles.compareBarContainer}>
+                  <View style={[styles.compareBarBg, { backgroundColor: colors.glassBorder }]}>
+                    <RNAnimated.View 
+                      style={[
+                        styles.compareBarFill,
+                        {
+                          backgroundColor: '#F59E0B',
+                          width: compareBar2Anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', `${data2 ? (data2.totalCarbs / maxCarbs) * 100 : 0}%`],
+                          }),
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.compareBarValue, { color: colors.text, fontSize: responsive.isSmallPhone ? 11 : 12 }]}>{data2?.hasMeals ? data2.totalCarbs : 0}</Text>
                 </View>
               </View>
             </View>
@@ -1179,7 +1219,6 @@ export default function StatsScreen() {
               </View>
             </View>
           </View>
-        )}
       </View>
     );
   };
