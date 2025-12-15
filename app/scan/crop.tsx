@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   hintText: {
-    color: '#aaa',
+    color: '#fff',
     marginTop: 16,
     fontSize: 14,
   }

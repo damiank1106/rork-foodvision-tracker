@@ -39,15 +39,15 @@ export const DarkColors = {
   
   text: '#FFFFFF',
   textPrimary: '#FFFFFF',
-  textSecondary: '#B8C2CC',
-  textMuted: '#6B7280',
+  textSecondary: '#FFFFFF',
+  textMuted: '#FFFFFF',
   
   tint: '#4DB8FF',
   primary: '#4DB8FF',
   secondaryAccent: '#009DFF',
   accent: '#4DB8FF',
   
-  tabIconDefault: '#6B7280',
+  tabIconDefault: '#FFFFFF',
   tabIconSelected: '#4DB8FF',
   
   glassBorder: 'rgba(255, 255, 255, 0.25)',
