@@ -205,7 +205,7 @@ export default function ProfileScreen() {
                 <View style={[styles.formGroup, { width: 80, marginRight: 16 }]}>
                   <Text style={[styles.label, { color: colors.textSecondary }]}>Age</Text>
                   <TextInput
-                    style={[styles.input, { textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                    style={[styles.input, { textAlign: 'center', color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                     value={profile?.age?.toString() || ''}
                     onChangeText={(t) => handleUpdateProfile('age', parseInt(t) || null)}
                     placeholder="25"
@@ -236,7 +236,7 @@ export default function ProfileScreen() {
                     <View style={[styles.row, { marginBottom: 0, justifyContent: 'flex-start', gap: 6 }]}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
-                           style={[styles.input, { width: 44, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                           style={[styles.input, { width: 44, marginBottom: 0, textAlign: 'center', color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).ft}
                            onChangeText={(t) => {
                               const currentIn = cmToFtIn(profile?.heightCm).in;
@@ -248,11 +248,11 @@ export default function ProfileScreen() {
                            placeholderTextColor={colors.textSecondary}
                            maxLength={1}
                          />
-                         <Text style={{ color: colors.text, marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&apos;</Text>
+                         <Text style={{ color: '#FFF', marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&apos;</Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
-                           style={[styles.input, { width: 50, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                           style={[styles.input, { width: 50, marginBottom: 0, textAlign: 'center', color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).in}
                            onChangeText={(t) => {
                               const currentFt = cmToFtIn(profile?.heightCm).ft;
@@ -264,12 +264,12 @@ export default function ProfileScreen() {
                            placeholderTextColor={colors.textSecondary}
                            maxLength={2}
                          />
-                         <Text style={{ color: colors.text, marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&quot;</Text>
+                         <Text style={{ color: '#FFF', marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&quot;</Text>
                       </View>
                     </View>
                   ) : (
                     <TextInput
-                      style={[styles.input, { width: 120, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                      style={[styles.input, { width: 120, textAlign: 'center', color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                       value={profile?.heightCm?.toString() || ''}
                       onChangeText={(t) => handleUpdateProfile('heightCm', parseInt(t) || null)}
                       placeholder="175"
@@ -283,7 +283,7 @@ export default function ProfileScreen() {
               <View style={styles.formGroup}>
                 <Text style={[styles.label, { color: colors.textSecondary }]}>Weight (kg)</Text>
                 <TextInput
-                  style={[styles.input, { color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                  style={[styles.input, { color: '#FFF', borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                   value={profile?.weightKg?.toString() || ''}
                   onChangeText={(t) => handleUpdateProfile('weightKg', parseInt(t) || null)}
                   placeholder="70"
