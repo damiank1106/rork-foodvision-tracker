@@ -234,9 +234,9 @@ export default function ProfileScreen() {
                   
                   {profile?.heightUnit === 'ft' ? (
                     <View style={[styles.row, { marginBottom: 0, justifyContent: 'flex-start', gap: 6 }]}>
-                      <View style={{ width: 48, flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
-                           style={[styles.input, { flex: 1, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                           style={[styles.input, { width: 40, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).ft}
                            onChangeText={(t) => {
                               const currentIn = cmToFtIn(profile?.heightCm).in;
@@ -246,12 +246,13 @@ export default function ProfileScreen() {
                            placeholder="5"
                            keyboardType="numeric"
                            placeholderTextColor={colors.textSecondary}
+                           maxLength={1}
                          />
                          <Text style={{ color: colors.text, marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&apos;</Text>
                       </View>
-                      <View style={{ width: 24, flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
-                           style={[styles.input, { flex: 1, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                           style={[styles.input, { width: 44, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).in}
                            onChangeText={(t) => {
                               const currentFt = cmToFtIn(profile?.heightCm).ft;
@@ -261,6 +262,7 @@ export default function ProfileScreen() {
                            placeholder="10"
                            keyboardType="numeric"
                            placeholderTextColor={colors.textSecondary}
+                           maxLength={2}
                          />
                          <Text style={{ color: colors.text, marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&quot;</Text>
                       </View>
