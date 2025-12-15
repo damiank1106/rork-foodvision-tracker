@@ -249,7 +249,7 @@ export default function ProfileScreen() {
                          />
                          <Text style={{ color: colors.text, marginLeft: 2, fontSize: 14, fontWeight: '600' }}>&apos;</Text>
                       </View>
-                      <View style={{ width: 48, flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ width: 24, flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
                            style={[styles.input, { flex: 1, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).in}
