@@ -202,10 +202,10 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.row}>
-                <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
+                <View style={[styles.formGroup, { width: 80, marginRight: 16 }]}>
                   <Text style={[styles.label, { color: colors.textSecondary }]}>Age</Text>
                   <TextInput
-                    style={[styles.input, { color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                    style={[styles.input, { textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                     value={profile?.age?.toString() || ''}
                     onChangeText={(t) => handleUpdateProfile('age', parseInt(t) || null)}
                     placeholder="25"
@@ -213,7 +213,7 @@ export default function ProfileScreen() {
                     placeholderTextColor={colors.textSecondary}
                   />
                 </View>
-                <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
+                <View style={[styles.formGroup, { flex: 1 }]}>
                   <View style={styles.labelRow}>
                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 0 }]}>Height</Text>
                     <View style={styles.unitToggle}>
@@ -233,8 +233,8 @@ export default function ProfileScreen() {
                   </View>
                   
                   {profile?.heightUnit === 'ft' ? (
-                    <View style={[styles.row, { marginBottom: 0 }]}>
-                      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={[styles.row, { marginBottom: 0, justifyContent: 'flex-start', gap: 12 }]}>
+                      <View style={{ width: 70, flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
                            style={[styles.input, { flex: 1, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).ft}
@@ -249,7 +249,7 @@ export default function ProfileScreen() {
                          />
                          <Text style={{ color: colors.textSecondary, marginLeft: 4, marginRight: 8, fontSize: 16 }}>&apos;</Text>
                       </View>
-                      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ width: 70, flexDirection: 'row', alignItems: 'center' }}>
                          <TextInput
                            style={[styles.input, { flex: 1, marginBottom: 0, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                            value={cmToFtIn(profile?.heightCm).in}
@@ -267,7 +267,7 @@ export default function ProfileScreen() {
                     </View>
                   ) : (
                     <TextInput
-                      style={[styles.input, { color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
+                      style={[styles.input, { width: 120, textAlign: 'center', color: colors.text, borderColor: colors.glassBorder, backgroundColor: colors.glassBackgroundStrong }]}
                       value={profile?.heightCm?.toString() || ''}
                       onChangeText={(t) => handleUpdateProfile('heightCm', parseInt(t) || null)}
                       placeholder="175"
