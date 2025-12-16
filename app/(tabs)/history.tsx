@@ -466,13 +466,12 @@ const styles = StyleSheet.create({
   },
   mealCard: {
     marginBottom: 12,
-    padding: 0,
+    padding: 2,
     position: 'relative',
   },
   mealTouchable: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
   },
   thumbnail: {
     width: 52,
@@ -481,19 +480,18 @@ const styles = StyleSheet.create({
   },
   mealInfo: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: 12,
     justifyContent: 'center',
-    paddingVertical: 4,
   },
   dishName: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 1,
+    marginBottom: 2,
   },
   dateText: {
     fontSize: 12,
@@ -501,7 +499,7 @@ const styles = StyleSheet.create({
   calsText: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginTop: 1,
+    marginTop: 2,
   },
   emptyState: {
     flex: 1,
