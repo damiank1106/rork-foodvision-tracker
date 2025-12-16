@@ -242,10 +242,13 @@ export default function HistoryScreen() {
           <View style={styles.headerActions}>
             <TouchableOpacity
               onPress={handleToggleCalendar}
-              style={[styles.headerIconButton, { backgroundColor: colors.glassBackgroundStrong }]}
+              style={[
+                styles.headerIconButton,
+                { backgroundColor: showCalendar ? colors.tint : colors.glassBackgroundStrong }
+              ]}
               hitSlop={10}
             >
-              <CalendarIcon color={colors.text} size={22} />
+              <CalendarIcon color={showCalendar ? '#FFFFFF' : colors.text} size={22} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleStartAddMeal}
