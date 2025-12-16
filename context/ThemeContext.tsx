@@ -4,7 +4,17 @@ import { LightColors, DarkColors } from '@/constants/colors';
 import { useMemo } from 'react';
 
 export const [ThemeProvider, useTheme] = createContextHook(() => {
-  const { theme, saveTheme, isLoading } = useSettings();
+  const { 
+    theme, 
+    saveTheme, 
+    animatedBgEnabled,
+    animatedBgColor,
+    animatedBgIntensity,
+    saveAnimatedBgEnabled,
+    saveAnimatedBgColor,
+    saveAnimatedBgIntensity,
+    isLoading 
+  } = useSettings();
 
   const colors = useMemo(() => {
     return theme === 'dark' ? DarkColors : LightColors;
@@ -21,5 +31,11 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     toggleTheme,
     colors,
     isLoading,
+    animatedBgEnabled,
+    animatedBgColor,
+    animatedBgIntensity,
+    setAnimatedBgEnabled: saveAnimatedBgEnabled,
+    setAnimatedBgColor: saveAnimatedBgColor,
+    setAnimatedBgIntensity: saveAnimatedBgIntensity,
   };
 });

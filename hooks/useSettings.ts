@@ -6,8 +6,12 @@ export const STORAGE_KEY_DEEPSEEK_API_KEY = 'foodvision_deepseek_api_key';
 export const STORAGE_KEY_THEME = 'foodvision_theme';
 export const STORAGE_KEY_OPENAI_MODEL = 'foodvision_openai_model';
 export const STORAGE_KEY_DEEPSEEK_MODEL = 'foodvision_deepseek_model';
+export const STORAGE_KEY_ANIMATED_BG_ENABLED = 'foodvision_animated_bg_enabled';
+export const STORAGE_KEY_ANIMATED_BG_COLOR = 'foodvision_animated_bg_color';
+export const STORAGE_KEY_ANIMATED_BG_INTENSITY = 'foodvision_animated_bg_intensity';
 
 export type ThemeType = 'light' | 'dark';
+export type AnimatedBgIntensity = 'low' | 'medium' | 'high' | 'super-high';
 
 export async function getStoredOpenAiKey(): Promise<string | null> {
   try {
@@ -51,6 +55,9 @@ export function useSettings() {
   const [theme, setTheme] = useState<ThemeType>('dark');
   const [openAiModel, setOpenAiModel] = useState<string>('gpt-4o-mini');
   const [deepSeekModel, setDeepSeekModel] = useState<string>('deepseek-chat');
+  const [animatedBgEnabled, setAnimatedBgEnabled] = useState<boolean>(false);
+  const [animatedBgColor, setAnimatedBgColor] = useState<string>('#4A90E2');
+  const [animatedBgIntensity, setAnimatedBgIntensity] = useState<AnimatedBgIntensity>('medium');
   
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,12 +65,24 @@ export function useSettings() {
   const loadSettings = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [storedKey, storedDeepSeekKey, storedTheme, storedOpenAiModel, storedDeepSeekModel] = await Promise.all([
+      const [
+        storedKey, 
+        storedDeepSeekKey, 
+        storedTheme, 
+        storedOpenAiModel, 
+        storedDeepSeekModel,
+        storedAnimatedBgEnabled,
+        storedAnimatedBgColor,
+        storedAnimatedBgIntensity
+      ] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEY_API_KEY),
         AsyncStorage.getItem(STORAGE_KEY_DEEPSEEK_API_KEY),
         AsyncStorage.getItem(STORAGE_KEY_THEME),
         AsyncStorage.getItem(STORAGE_KEY_OPENAI_MODEL),
-        AsyncStorage.getItem(STORAGE_KEY_DEEPSEEK_MODEL)
+        AsyncStorage.getItem(STORAGE_KEY_DEEPSEEK_MODEL),
+        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_ENABLED),
+        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_COLOR),
+        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_INTENSITY)
       ]);
 
       if (storedKey) setApiKey(storedKey);
@@ -73,6 +92,9 @@ export function useSettings() {
       }
       if (storedOpenAiModel) setOpenAiModel(storedOpenAiModel);
       if (storedDeepSeekModel) setDeepSeekModel(storedDeepSeekModel);
+      if (storedAnimatedBgEnabled !== null) setAnimatedBgEnabled(storedAnimatedBgEnabled === 'true');
+      if (storedAnimatedBgColor) setAnimatedBgColor(storedAnimatedBgColor);
+      if (storedAnimatedBgIntensity) setAnimatedBgIntensity(storedAnimatedBgIntensity as AnimatedBgIntensity);
       
       setError(null);
     } catch (e) {
@@ -154,6 +176,39 @@ export function useSettings() {
     }
   }, []);
 
+  const saveAnimatedBgEnabled = useCallback(async (enabled: boolean) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_ANIMATED_BG_ENABLED, enabled.toString());
+      setAnimatedBgEnabled(enabled);
+      return true;
+    } catch (e) {
+      console.error('Failed to save animated bg enabled', e);
+      return false;
+    }
+  }, []);
+
+  const saveAnimatedBgColor = useCallback(async (color: string) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_ANIMATED_BG_COLOR, color);
+      setAnimatedBgColor(color);
+      return true;
+    } catch (e) {
+      console.error('Failed to save animated bg color', e);
+      return false;
+    }
+  }, []);
+
+  const saveAnimatedBgIntensity = useCallback(async (intensity: AnimatedBgIntensity) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_ANIMATED_BG_INTENSITY, intensity);
+      setAnimatedBgIntensity(intensity);
+      return true;
+    } catch (e) {
+      console.error('Failed to save animated bg intensity', e);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
@@ -164,6 +219,9 @@ export function useSettings() {
     theme,
     openAiModel,
     deepSeekModel,
+    animatedBgEnabled,
+    animatedBgColor,
+    animatedBgIntensity,
     isLoading,
     error,
     saveApiKey,
@@ -171,6 +229,9 @@ export function useSettings() {
     saveOpenAiModel,
     saveDeepSeekModel,
     saveTheme,
+    saveAnimatedBgEnabled,
+    saveAnimatedBgColor,
+    saveAnimatedBgIntensity,
     reload: loadSettings,
   };
 }

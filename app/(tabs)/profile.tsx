@@ -4,7 +4,7 @@ import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { GlassButton } from '@/components/GlassButton';
 import { useTheme } from '@/context/ThemeContext';
-import { Key, ShieldCheck, Moon, Sun } from 'lucide-react-native';
+import { Key, ShieldCheck, Moon, Sun, Sparkles } from 'lucide-react-native';
 import { useSettings } from '@/hooks/useSettings';
 import { useProfile } from '@/context/ProfileContext';
 import * as Haptics from 'expo-haptics';
@@ -42,7 +42,17 @@ export default function ProfileScreen() {
     deepSeekModel,
     isLoading: isSettingsLoading 
   } = useSettings();
-  const { colors, theme, toggleTheme } = useTheme();
+  const { 
+    colors, 
+    theme, 
+    toggleTheme,
+    animatedBgEnabled,
+    animatedBgColor,
+    animatedBgIntensity,
+    setAnimatedBgEnabled,
+    setAnimatedBgColor,
+    setAnimatedBgIntensity
+  } = useTheme();
   const { profile, updateProfile, recalculateTargets, isLoading: isProfileLoading } = useProfile();
 
   const [inputKey, setInputKey] = useState('');
@@ -223,6 +233,86 @@ export default function ProfileScreen() {
                    thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
                  />
                </View>
+
+               <View style={[styles.divider, { backgroundColor: colors.glassBorder, marginVertical: 12 }]} />
+
+               <View style={styles.themeRow}>
+                 <View style={styles.themeInfo}>
+                    <Sparkles size={24} color={colors.tint} />
+                    <Text style={[styles.themeText, { color: colors.text }]}>Animated Background</Text>
+                 </View>
+                 <Switch 
+                   value={animatedBgEnabled}
+                   onValueChange={(value) => {
+                     Haptics.selectionAsync();
+                     setAnimatedBgEnabled(value);
+                   }}
+                   trackColor={{ false: '#767577', true: colors.tint }}
+                   thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
+                 />
+               </View>
+
+               {animatedBgEnabled && (
+                 <>
+                   <View style={{ marginTop: 16 }}>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Background Color</Text>
+                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
+                       {[
+                         { color: '#4A90E2', name: 'Blue' },
+                         { color: '#9B59B6', name: 'Purple' },
+                         { color: '#E74C3C', name: 'Red' },
+                         { color: '#3498DB', name: 'Ocean' },
+                         { color: '#1ABC9C', name: 'Teal' },
+                         { color: '#F39C12', name: 'Orange' },
+                         { color: '#E91E63', name: 'Pink' },
+                         { color: '#00BCD4', name: 'Cyan' },
+                         { color: '#8BC34A', name: 'Green' },
+                       ].map((item) => (
+                         <TouchableOpacity
+                           key={item.color}
+                           onPress={() => {
+                             Haptics.selectionAsync();
+                             setAnimatedBgColor(item.color);
+                           }}
+                           style={[
+                             styles.colorOption,
+                             { backgroundColor: item.color },
+                             animatedBgColor === item.color && styles.colorOptionSelected,
+                           ]}
+                         >
+                           {animatedBgColor === item.color && (
+                             <View style={styles.colorCheckmark}>
+                               <Text style={styles.colorCheckmarkText}>✓</Text>
+                             </View>
+                           )}
+                         </TouchableOpacity>
+                       ))}
+                     </ScrollView>
+                   </View>
+
+                   <View style={{ marginTop: 16 }}>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Intensity</Text>
+                     <View style={styles.radioGroup}>
+                       {renderRadio('Low', 'low', animatedBgIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedBgIntensity(v);
+                       })}
+                       {renderRadio('Medium', 'medium', animatedBgIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedBgIntensity(v);
+                       })}
+                       {renderRadio('High', 'high', animatedBgIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedBgIntensity(v);
+                       })}
+                       {renderRadio('Super High', 'super-high', animatedBgIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedBgIntensity(v);
+                       })}
+                     </View>
+                   </View>
+                 </>
+               )}
              </GlassCard>
           </Animated.View>
 
@@ -651,5 +741,38 @@ const styles = StyleSheet.create({
   toastText: {
     fontSize: 16,
     fontWeight: '600',
-  }
+  },
+  colorScroll: {
+    flexGrow: 0,
+  },
+  colorOption: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'transparent',
+  },
+  colorOptionSelected: {
+    borderColor: '#FFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  colorCheckmark: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  colorCheckmarkText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
 });
