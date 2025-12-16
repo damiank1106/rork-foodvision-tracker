@@ -16,14 +16,24 @@ export const GlassCard: React.FC<GlassCardProps> = ({ children, style, contentSt
   const opacityMultiplier = glassOpacity / 10;
   const adjustedBackgroundOpacity = Math.min(1, (theme === 'dark' ? 0.15 : 0.2) + (opacityMultiplier * 0.85));
   
-  const baseColor = theme === 'dark' ? '255, 255, 255' : '0, 0, 0';
-  const customBackgroundColor = `rgba(${baseColor}, ${adjustedBackgroundOpacity})`;
+  const getBackgroundColor = () => {
+    if (glassOpacity === 0) {
+      return colors.glassBackground;
+    }
+    
+    if (theme === 'dark' && glassOpacity === 1) {
+      return '#0A1929';
+    }
+    
+    const baseColor = theme === 'dark' ? '255, 255, 255' : '0, 0, 0';
+    return `rgba(${baseColor}, ${adjustedBackgroundOpacity})`;
+  };
   
   return (
     <View style={[
       styles.wrapper, 
       { 
-        backgroundColor: glassOpacity > 0 ? customBackgroundColor : colors.glassBackground,
+        backgroundColor: getBackgroundColor(),
         borderColor: colors.glassBorder,
         shadowColor: colors.primary,
       }, 

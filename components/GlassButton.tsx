@@ -26,7 +26,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
   variant = 'primary',
   disabled = false
 }) => {
-  const { colors, theme } = useTheme();
+  const { colors, theme, glassOpacity } = useTheme();
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
@@ -49,6 +49,13 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
     };
   });
 
+  const getBackgroundColor = () => {
+    if (theme === 'dark' && glassOpacity === 1) {
+      return '#0A1929';
+    }
+    return colors.glassBackground;
+  };
+
   return (
     <AnimatedPressable 
       onPress={handlePress}
@@ -58,7 +65,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
         styles.container, 
         { 
           borderColor: colors.glassBorder,
-          backgroundColor: colors.glassBackground,
+          backgroundColor: getBackgroundColor(),
         },
         style,
         animatedStyle
