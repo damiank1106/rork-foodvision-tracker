@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   },
   mealCard: {
     marginBottom: 12,
-    padding: 8,
+    padding: 4,
     position: 'relative',
   },
   mealTouchable: {
