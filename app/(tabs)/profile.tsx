@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, Switch } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, Switch, Dimensions } from 'react-native';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { GlassButton } from '@/components/GlassButton';
@@ -10,6 +10,8 @@ import { useProfile } from '@/context/ProfileContext';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { useFocusEffect } from 'expo-router';
+
+const isSmallDevice = Dimensions.get('window').width < 380;
 
 const cmToFtIn = (cm: number | null) => {
   if (!cm) return { ft: '', in: '' };
@@ -417,12 +419,12 @@ export default function ProfileScreen() {
 
           {/* Appearance Section */}
           <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.section}>
-             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Appearance</Text>
+             <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontSize: isSmallDevice ? 16 : 18 }]}>Appearance</Text>
              <GlassCard style={styles.themeCard}>
                <View style={styles.themeRow}>
                  <View style={styles.themeInfo}>
-                    <Layers size={24} color={colors.tint} />
-                    <Text style={[styles.themeText, { color: colors.text }]}>Glass Containers Opacity</Text>
+                    <Layers size={isSmallDevice ? 20 : 24} color={colors.tint} />
+                    <Text style={[styles.themeText, { color: colors.text, fontSize: isSmallDevice ? 14 : 16 }]}>Glass Containers Opacity</Text>
                  </View>
                </View>
                <View style={styles.opacityButtons}>
@@ -439,12 +441,13 @@ export default function ProfileScreen() {
                      style={[
                        styles.opacityButton,
                        { borderColor: colors.glassBorder, backgroundColor: 'rgba(255,255,255,0.05)' },
-                       glassOpacity === item.level && { backgroundColor: colors.tint, borderColor: colors.tint }
+                       glassOpacity === item.level && { backgroundColor: colors.tint, borderColor: colors.tint },
+                       isSmallDevice && { paddingVertical: 10, paddingHorizontal: 24 }
                      ]}
                    >
                      <Text style={[
                        styles.opacityButtonText,
-                       { color: colors.textSecondary },
+                       { color: colors.textSecondary, fontSize: isSmallDevice ? 14 : 16 },
                        glassOpacity === item.level && { color: '#FFF', fontWeight: '600' }
                      ]}>{item.label}</Text>
                    </TouchableOpacity>
@@ -455,8 +458,8 @@ export default function ProfileScreen() {
 
                <View style={styles.themeRow}>
                  <View style={styles.themeInfo}>
-                    {theme === 'dark' ? <Moon size={24} color={colors.tint} /> : <Sun size={24} color={colors.tint} />}
-                    <Text style={[styles.themeText, { color: colors.text }]}>Dark Mode</Text>
+                    {theme === 'dark' ? <Moon size={isSmallDevice ? 20 : 24} color={colors.tint} /> : <Sun size={isSmallDevice ? 20 : 24} color={colors.tint} />}
+                    <Text style={[styles.themeText, { color: colors.text, fontSize: isSmallDevice ? 14 : 16 }]}>Dark Mode</Text>
                  </View>
                  <Switch 
                    value={theme === 'dark'}
@@ -470,8 +473,8 @@ export default function ProfileScreen() {
 
                <View style={styles.themeRow}>
                  <View style={styles.themeInfo}>
-                    <Apple size={24} color={colors.tint} />
-                    <Text style={[styles.themeText, { color: colors.text }]}>Animated Food Icons</Text>
+                    <Apple size={isSmallDevice ? 20 : 24} color={colors.tint} />
+                    <Text style={[styles.themeText, { color: colors.text, fontSize: isSmallDevice ? 14 : 16 }]}>Animated Food Icons</Text>
                  </View>
                  <Switch 
                    value={animatedFoodIconsEnabled}
@@ -487,7 +490,7 @@ export default function ProfileScreen() {
                {animatedFoodIconsEnabled && (
                  <>
                    <View style={{ marginTop: 16 }}>
-                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Food Icons Color</Text>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12, fontSize: isSmallDevice ? 12 : 14 }]}>Food Icons Color</Text>
                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
                        {[
                          { color: '#E74C3C', name: 'Red' },
@@ -523,7 +526,7 @@ export default function ProfileScreen() {
                    </View>
 
                    <View style={{ marginTop: 16 }}>
-                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Food Icons Intensity</Text>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12, fontSize: isSmallDevice ? 12 : 14 }]}>Food Icons Intensity</Text>
                      <View style={styles.radioGroup}>
                        {renderRadio('Low', 'low', animatedFoodIconsIntensity, (v) => {
                          Haptics.selectionAsync();
@@ -550,8 +553,8 @@ export default function ProfileScreen() {
 
                <View style={styles.themeRow}>
                  <View style={styles.themeInfo}>
-                    <Sparkles size={24} color={colors.tint} />
-                    <Text style={[styles.themeText, { color: colors.text }]}>Animated Background</Text>
+                    <Sparkles size={isSmallDevice ? 20 : 24} color={colors.tint} />
+                    <Text style={[styles.themeText, { color: colors.text, fontSize: isSmallDevice ? 14 : 16 }]}>Animated Background</Text>
                  </View>
                  <Switch 
                    value={animatedBgEnabled}
@@ -567,7 +570,7 @@ export default function ProfileScreen() {
                {animatedBgEnabled && (
                  <>
                    <View style={{ marginTop: 16 }}>
-                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Background Color</Text>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12, fontSize: isSmallDevice ? 12 : 14 }]}>Background Color</Text>
                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
                        {[
                          { color: '#4A90E2', name: 'Blue' },
@@ -603,7 +606,7 @@ export default function ProfileScreen() {
                    </View>
 
                    <View style={{ marginTop: 16 }}>
-                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Intensity</Text>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12, fontSize: isSmallDevice ? 12 : 14 }]}>Intensity</Text>
                      <View style={styles.radioGroup}>
                        {renderRadio('Low', 'low', animatedBgIntensity, (v) => {
                          Haptics.selectionAsync();
@@ -831,7 +834,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   radioText: {
-    fontSize: 14,
+    fontSize: 13,
   },
   horizontalScroll: {
     flexGrow: 0,
