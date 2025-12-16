@@ -4,7 +4,7 @@ import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { GlassButton } from '@/components/GlassButton';
 import { useTheme } from '@/context/ThemeContext';
-import { Key, ShieldCheck, Moon, Sun, Sparkles } from 'lucide-react-native';
+import { Key, ShieldCheck, Moon, Sun, Sparkles, Apple } from 'lucide-react-native';
 import { useSettings } from '@/hooks/useSettings';
 import { useProfile } from '@/context/ProfileContext';
 import * as Haptics from 'expo-haptics';
@@ -49,9 +49,11 @@ export default function ProfileScreen() {
     animatedBgEnabled,
     animatedBgColor,
     animatedBgIntensity,
+    animatedFoodIconsEnabled,
     setAnimatedBgEnabled,
     setAnimatedBgColor,
-    setAnimatedBgIntensity
+    setAnimatedBgIntensity,
+    setAnimatedFoodIconsEnabled
   } = useTheme();
   const { profile, updateProfile, recalculateTargets, isLoading: isProfileLoading } = useProfile();
 
@@ -229,6 +231,24 @@ export default function ProfileScreen() {
                  <Switch 
                    value={theme === 'dark'}
                    onValueChange={handleToggleTheme}
+                   trackColor={{ false: '#767577', true: colors.tint }}
+                   thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
+                 />
+               </View>
+
+               <View style={[styles.divider, { backgroundColor: colors.glassBorder, marginVertical: 12 }]} />
+
+               <View style={styles.themeRow}>
+                 <View style={styles.themeInfo}>
+                    <Apple size={24} color={colors.tint} />
+                    <Text style={[styles.themeText, { color: colors.text }]}>Animated Food Icons</Text>
+                 </View>
+                 <Switch 
+                   value={animatedFoodIconsEnabled}
+                   onValueChange={(value) => {
+                     Haptics.selectionAsync();
+                     setAnimatedFoodIconsEnabled(value);
+                   }}
                    trackColor={{ false: '#767577', true: colors.tint }}
                    thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
                  />

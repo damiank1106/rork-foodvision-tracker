@@ -9,6 +9,7 @@ export const STORAGE_KEY_DEEPSEEK_MODEL = 'foodvision_deepseek_model';
 export const STORAGE_KEY_ANIMATED_BG_ENABLED = 'foodvision_animated_bg_enabled';
 export const STORAGE_KEY_ANIMATED_BG_COLOR = 'foodvision_animated_bg_color';
 export const STORAGE_KEY_ANIMATED_BG_INTENSITY = 'foodvision_animated_bg_intensity';
+export const STORAGE_KEY_ANIMATED_FOOD_ICONS_ENABLED = 'foodvision_animated_food_icons_enabled';
 
 export type ThemeType = 'light' | 'dark';
 export type AnimatedBgIntensity = 'low' | 'medium' | 'high' | 'super-high';
@@ -58,6 +59,7 @@ export function useSettings() {
   const [animatedBgEnabled, setAnimatedBgEnabled] = useState<boolean>(false);
   const [animatedBgColor, setAnimatedBgColor] = useState<string>('#4A90E2');
   const [animatedBgIntensity, setAnimatedBgIntensity] = useState<AnimatedBgIntensity>('medium');
+  const [animatedFoodIconsEnabled, setAnimatedFoodIconsEnabled] = useState<boolean>(false);
   
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +75,8 @@ export function useSettings() {
         storedDeepSeekModel,
         storedAnimatedBgEnabled,
         storedAnimatedBgColor,
-        storedAnimatedBgIntensity
+        storedAnimatedBgIntensity,
+        storedAnimatedFoodIconsEnabled
       ] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEY_API_KEY),
         AsyncStorage.getItem(STORAGE_KEY_DEEPSEEK_API_KEY),
@@ -82,7 +85,8 @@ export function useSettings() {
         AsyncStorage.getItem(STORAGE_KEY_DEEPSEEK_MODEL),
         AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_ENABLED),
         AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_COLOR),
-        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_INTENSITY)
+        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_INTENSITY),
+        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_ENABLED)
       ]);
 
       if (storedKey) setApiKey(storedKey);
@@ -95,6 +99,7 @@ export function useSettings() {
       if (storedAnimatedBgEnabled !== null) setAnimatedBgEnabled(storedAnimatedBgEnabled === 'true');
       if (storedAnimatedBgColor) setAnimatedBgColor(storedAnimatedBgColor);
       if (storedAnimatedBgIntensity) setAnimatedBgIntensity(storedAnimatedBgIntensity as AnimatedBgIntensity);
+      if (storedAnimatedFoodIconsEnabled !== null) setAnimatedFoodIconsEnabled(storedAnimatedFoodIconsEnabled === 'true');
       
       setError(null);
     } catch (e) {
@@ -209,6 +214,17 @@ export function useSettings() {
     }
   }, []);
 
+  const saveAnimatedFoodIconsEnabled = useCallback(async (enabled: boolean) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_ENABLED, enabled.toString());
+      setAnimatedFoodIconsEnabled(enabled);
+      return true;
+    } catch (e) {
+      console.error('Failed to save animated food icons enabled', e);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
@@ -222,6 +238,7 @@ export function useSettings() {
     animatedBgEnabled,
     animatedBgColor,
     animatedBgIntensity,
+    animatedFoodIconsEnabled,
     isLoading,
     error,
     saveApiKey,
@@ -232,6 +249,7 @@ export function useSettings() {
     saveAnimatedBgEnabled,
     saveAnimatedBgColor,
     saveAnimatedBgIntensity,
+    saveAnimatedFoodIconsEnabled,
     reload: loadSettings,
   };
 }

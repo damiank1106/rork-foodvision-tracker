@@ -4,6 +4,7 @@ import { StyleSheet, ViewStyle, Animated } from 'react-native';
 import { Edge, SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { AnimatedBgIntensity } from '@/hooks/useSettings';
+import { Pizza, Coffee, Apple, Croissant, Cherry, IceCream, Candy, Cookie, Cake } from 'lucide-react-native';
 
 interface ScreenWrapperProps {
   children: React.ReactNode;
@@ -223,8 +224,148 @@ const AnimatedBackground: React.FC<{ color: string; intensity: AnimatedBgIntensi
   );
 };
 
+const foodIcons = [
+  { Icon: Pizza, size: 48 },
+  { Icon: Coffee, size: 42 },
+  { Icon: Apple, size: 40 },
+  { Icon: Croissant, size: 46 },
+  { Icon: Cherry, size: 38 },
+  { Icon: IceCream, size: 44 },
+  { Icon: Candy, size: 40 },
+  { Icon: Cookie, size: 42 },
+  { Icon: Cake, size: 46 },
+];
+
+const AnimatedFoodIcons: React.FC<{ color: string }> = ({ color }) => {
+  const positions = useRef(
+    foodIcons.map(() => ({
+      translateX: new Animated.Value(0),
+      translateY: new Animated.Value(0),
+      rotate: new Animated.Value(0),
+    }))
+  ).current;
+
+  useEffect(() => {
+    const animations = positions.map((pos, index) => {
+      const duration = 8000 + index * 800;
+      const delay = index * 400;
+
+      const xRange = [-120 + index * 20, 120 - index * 15];
+      const yRange = [-150 + index * 25, 150 - index * 20];
+
+      const animation = Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.parallel([
+            Animated.timing(pos.translateX, {
+              toValue: xRange[1],
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pos.translateY, {
+              toValue: yRange[1],
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pos.rotate, {
+              toValue: 360,
+              duration: duration * 1.5,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.parallel([
+            Animated.timing(pos.translateX, {
+              toValue: xRange[0],
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pos.translateY, {
+              toValue: yRange[0],
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pos.rotate, {
+              toValue: 720,
+              duration: duration * 1.5,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.parallel([
+            Animated.timing(pos.translateX, {
+              toValue: 0,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pos.translateY, {
+              toValue: 0,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pos.rotate, {
+              toValue: 1080,
+              duration: duration * 1.5,
+              useNativeDriver: true,
+            }),
+          ]),
+        ])
+      );
+
+      animation.start();
+      return animation;
+    });
+
+    return () => {
+      animations.forEach((anim) => anim.stop());
+    };
+  }, [positions]);
+
+  const iconPositions = [
+    { top: '8%', left: '10%' },
+    { top: '15%', right: '15%' },
+    { top: '25%', left: '5%' },
+    { top: '35%', right: '8%' },
+    { top: '50%', left: '12%' },
+    { top: '60%', right: '10%' },
+    { top: '70%', left: '8%' },
+    { top: '78%', right: '12%' },
+    { bottom: '12%', left: '15%' },
+  ];
+
+  return (
+    <>
+      {foodIcons.map(({ Icon, size }, index) => {
+        const pos = positions[index];
+        const position = iconPositions[index];
+        const rotate = pos.rotate.interpolate({
+          inputRange: [0, 1080],
+          outputRange: ['0deg', '1080deg'],
+        });
+
+        return (
+          <Animated.View
+            key={index}
+            style={[
+              styles.foodIcon,
+              position,
+              {
+                transform: [
+                  { translateX: pos.translateX },
+                  { translateY: pos.translateY },
+                  { rotate },
+                ],
+              },
+            ]}
+          >
+            <Icon size={size} color={color} strokeWidth={1.5} style={{ opacity: 0.15 }} />
+          </Animated.View>
+        );
+      })}
+    </>
+  );
+};
+
 export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children, style, contentContainerStyle, edges }) => {
-  const { colors, animatedBgEnabled, animatedBgColor, animatedBgIntensity } = useTheme();
+  const { colors, animatedBgEnabled, animatedBgColor, animatedBgIntensity, animatedFoodIconsEnabled } = useTheme();
 
   return (
     <LinearGradient
@@ -233,6 +374,9 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children, style, c
     >
       {animatedBgEnabled && (
         <AnimatedBackground color={animatedBgColor} intensity={animatedBgIntensity} />
+      )}
+      {animatedFoodIconsEnabled && (
+        <AnimatedFoodIcons color={animatedBgColor} />
       )}
       <SafeAreaView
         style={[styles.container, style]}
@@ -258,5 +402,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 0.3,
     shadowRadius: 40,
+  },
+  foodIcon: {
+    position: 'absolute' as const,
   },
 });
