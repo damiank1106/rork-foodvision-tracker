@@ -233,7 +233,7 @@ export default function CoachScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoid}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 24}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 30}
         >
           <FlatList
             ref={flatListRef}
