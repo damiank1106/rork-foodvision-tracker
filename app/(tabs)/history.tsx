@@ -1,12 +1,13 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Alert, Dimensions, Platform } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Alert, Dimensions, Platform, ScrollView } from 'react-native';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { useTheme } from '@/context/ThemeContext';
-import { CalendarDays, Clock, Trash2, Plus } from 'lucide-react-native';
+import { CalendarDays, Clock, Trash2, Plus, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { getAllMeals, SavedMeal, deleteMeal } from '@/services/mealsDb';
+import { getAllMeals, SavedMeal, deleteMeal, getMealsByDateRange } from '@/services/mealsDb';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 
 const MOCK_MEAL: SavedMeal = {
   id: 'mock-history-1',
@@ -35,6 +36,10 @@ export default function HistoryScreen() {
   const [meals, setMeals] = useState<SavedMeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [animationKey, setAnimationKey] = useState(0);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [filteredMeals, setFilteredMeals] = useState<SavedMeal[]>([]);
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   const isIPhone15ProMax = Platform.OS === 'ios' && screenWidth === 430 && screenHeight === 932;
@@ -138,6 +143,91 @@ export default function HistoryScreen() {
     router.push('/history/add');
   };
 
+  const handleToggleCalendar = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowCalendar(!showCalendar);
+    if (!showCalendar) {
+      loadCalendarMeals(calendarDate, null);
+    }
+  };
+
+  const loadCalendarMeals = async (date: Date, day: Date | null) => {
+    try {
+      if (day) {
+        const startOfDay = new Date(day);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(day);
+        endOfDay.setHours(23, 59, 59, 999);
+        const dayMeals = await getMealsByDateRange(startOfDay.toISOString(), endOfDay.toISOString());
+        setFilteredMeals(dayMeals);
+      } else {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        lastDay.setHours(23, 59, 59, 999);
+        const monthMeals = await getMealsByDateRange(firstDay.toISOString(), lastDay.toISOString());
+        setFilteredMeals(monthMeals);
+      }
+    } catch (e) {
+      console.error('Error loading calendar meals:', e);
+      setFilteredMeals([]);
+    }
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    Haptics.selectionAsync();
+    const newDate = new Date(calendarDate);
+    if (direction === 'prev') {
+      newDate.setMonth(calendarDate.getMonth() - 1);
+    } else {
+      newDate.setMonth(calendarDate.getMonth() + 1);
+    }
+    setCalendarDate(newDate);
+    setSelectedDay(null);
+    loadCalendarMeals(newDate, null);
+  };
+
+  const handleDayPress = (day: Date, hasMeals: boolean) => {
+    if (hasMeals) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setSelectedDay(day);
+      loadCalendarMeals(calendarDate, day);
+    }
+  };
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    const startOfCalendar = new Date(firstDay);
+    startOfCalendar.setDate(firstDay.getDate() - firstDay.getDay());
+    
+    const endOfCalendar = new Date(lastDay);
+    endOfCalendar.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
+    
+    const days: Date[] = [];
+    const currentDate = new Date(startOfCalendar);
+    
+    while (currentDate <= endOfCalendar) {
+      days.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return days;
+  };
+
+  const getMealCountForDay = (day: Date): number => {
+    const dayKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+    return meals.filter(meal => {
+      const mealDate = new Date(meal.createdAt);
+      const mealKey = `${mealDate.getFullYear()}-${String(mealDate.getMonth() + 1).padStart(2, '0')}-${String(mealDate.getDate()).padStart(2, '0')}`;
+      return mealKey === dayKey;
+    }).length;
+  };
+
   return (
     <ScreenWrapper>
       <View style={styles.content}>
@@ -151,6 +241,13 @@ export default function HistoryScreen() {
           </Animated.Text>
           <View style={styles.headerActions}>
             <TouchableOpacity
+              onPress={handleToggleCalendar}
+              style={[styles.headerIconButton, { backgroundColor: colors.glassBackgroundStrong }]}
+              hitSlop={10}
+            >
+              <CalendarIcon color={colors.text} size={22} />
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={handleStartAddMeal}
               style={[styles.headerIconButton, { backgroundColor: colors.glassBackgroundStrong }]}
               hitSlop={10}
@@ -160,21 +257,156 @@ export default function HistoryScreen() {
           </View>
         </View>
         
-        {meals.length === 0 && !loading ? (
-          <View key={`empty-${animationKey}`} style={styles.emptyState}>
-            <CalendarDays size={64} color={colors.textSecondary} style={{ opacity: 0.5 }} />
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No meals saved yet.</Text>
-            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Scan your first meal to see it here.</Text>
-          </View>
-        ) : (
-          <FlatList
-            key={`list-${animationKey}`}
-            data={meals}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
+        {showCalendar ? (
+          <ScrollView 
             showsVerticalScrollIndicator={false}
-          />
+            contentContainerStyle={styles.listContent}
+          >
+            <GlassCard style={styles.calendarCard}>
+              <View style={styles.calendarHeader}>
+                <TouchableOpacity onPress={() => navigateMonth('prev')} style={styles.navButton}>
+                  <ChevronLeft size={24} color={colors.text} />
+                </TouchableOpacity>
+                
+                <View style={styles.monthTitle}>
+                  <CalendarIcon size={20} color={colors.tint} style={{ marginRight: 8 }} />
+                  <Text style={[styles.monthText, { color: colors.text }]}>
+                    {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </Text>
+                </View>
+                
+                <TouchableOpacity onPress={() => navigateMonth('next')} style={styles.navButton}>
+                  <ChevronRight size={24} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.weekDaysRow}>
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                  <Text key={idx} style={[styles.weekDayText, { color: colors.textSecondary }]}>
+                    {day}
+                  </Text>
+                ))}
+              </View>
+
+              {(() => {
+                const days = getDaysInMonth(calendarDate);
+                const weeks: Date[][] = [];
+                for (let i = 0; i < days.length; i += 7) {
+                  weeks.push(days.slice(i, i + 7));
+                }
+                
+                return weeks.map((week, weekIdx) => (
+                  <View key={weekIdx} style={styles.calendarWeek}>
+                    {week.map((day, dayIdx) => {
+                      const isCurrentMonth = day.getMonth() === calendarDate.getMonth();
+                      const mealCount = getMealCountForDay(day);
+                      const hasMeals = mealCount > 0;
+                      const isSelected = selectedDay?.toDateString() === day.toDateString();
+                      const today = new Date();
+                      const isToday = day.toDateString() === today.toDateString();
+                      
+                      return (
+                        <TouchableOpacity
+                          key={dayIdx}
+                          onPress={() => handleDayPress(day, hasMeals)}
+                          disabled={!hasMeals}
+                          style={[
+                            styles.calendarDay,
+                            !isCurrentMonth && styles.calendarDayInactive,
+                            isSelected && { 
+                              borderColor: colors.tint, 
+                              borderWidth: 2,
+                              backgroundColor: `${colors.tint}20`,
+                            },
+                            hasMeals && {
+                              backgroundColor: `${colors.tint}30`,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.calendarDayText,
+                              { color: isCurrentMonth ? colors.text : colors.textMuted },
+                              isToday && styles.todayText,
+                              hasMeals && { fontWeight: 'bold' },
+                            ]}
+                          >
+                            {day.getDate()}
+                          </Text>
+                          {hasMeals && (
+                            <View style={styles.mealDot}>
+                              <Text style={styles.mealCount}>{mealCount}</Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ));
+              })()}
+            </GlassCard>
+
+            <View style={styles.filteredMealsSection}>
+              <Text style={[styles.filteredMealsTitle, { color: colors.text }]}>
+                {selectedDay 
+                  ? `Meals on ${selectedDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                  : `Meals in ${calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
+                }
+              </Text>
+              {filteredMeals.length === 0 ? (
+                <View style={styles.emptyFiltered}>
+                  <Text style={[styles.emptyFilteredText, { color: colors.textSecondary }]}>No meals found</Text>
+                </View>
+              ) : (
+                filteredMeals.map((item, index) => {
+                  const thumbnail = item.photoUri || item.imageUri;
+                  const mealName = item.name || item.dishName;
+                  const mealDate = item.dateTime || item.createdAt;
+
+                  return (
+                    <GlassCard key={item.id} style={styles.mealCard}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          router.push(`/meal/${item.id}`);
+                        }}
+                        activeOpacity={0.8}
+                        style={styles.mealTouchable}
+                      >
+                        <Image source={{ uri: thumbnail }} style={[styles.thumbnail, { backgroundColor: colors.glassBackgroundStrong }]} />
+                        <View style={styles.mealInfo}>
+                          <Text style={[styles.dishName, { color: colors.text }]} numberOfLines={1}>{mealName}</Text>
+                          <View style={styles.metaRow}>
+                            <Clock size={12} color={colors.textSecondary} style={{ marginRight: 4 }} />
+                            <Text style={[styles.dateText, { color: colors.textSecondary }]}>
+                              {new Date(mealDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </Text>
+                          </View>
+                          <Text style={[styles.calsText, { color: colors.tint }]}>{Math.round(item.caloriesEstimate)} kcal</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </GlassCard>
+                  );
+                })
+              )}
+            </View>
+          </ScrollView>
+        ) : (
+          meals.length === 0 && !loading ? (
+            <View key={`empty-${animationKey}`} style={styles.emptyState}>
+              <CalendarDays size={64} color={colors.textSecondary} style={{ opacity: 0.5 }} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No meals saved yet.</Text>
+              <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Scan your first meal to see it here.</Text>
+            </View>
+          ) : (
+            <FlatList
+              key={`list-${animationKey}`}
+              data={meals}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+            />
+          )
         )}
       </View>
     </ScreenWrapper>
@@ -282,5 +514,94 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     marginTop: 8,
     textAlign: 'center',
+  },
+  calendarCard: {
+    marginBottom: 20,
+    padding: 16,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  navButton: {
+    padding: 8,
+  },
+  monthTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  monthText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  weekDaysRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 12,
+  },
+  weekDayText: {
+    fontSize: 12,
+    fontWeight: '600',
+    width: 40,
+    textAlign: 'center',
+  },
+  calendarWeek: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 8,
+  },
+  calendarDay: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  calendarDayInactive: {
+    opacity: 0.3,
+  },
+  calendarDayText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  todayText: {
+    color: '#3B82F6',
+    fontWeight: 'bold',
+  },
+  mealDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  mealCount: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  filteredMealsSection: {
+    marginTop: 8,
+  },
+  filteredMealsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  emptyFiltered: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  emptyFilteredText: {
+    fontSize: 16,
   },
 });
