@@ -106,8 +106,13 @@ export default function MealDetailScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      await updateMeal(editedMeal);
-      setMeal(editedMeal);
+      const cleanedMeal = {
+        ...editedMeal,
+        goodPoints: editedMeal.goodPoints.map(p => p.trim()).filter(p => p.length > 0),
+        badPoints: editedMeal.badPoints.map(p => p.trim()).filter(p => p.length > 0),
+      };
+      await updateMeal(cleanedMeal);
+      setMeal(cleanedMeal);
       setEditModalVisible(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Success', 'Meal updated successfully!');
@@ -569,10 +574,11 @@ export default function MealDetailScreen() {
                 <TextInput
                   style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
                   value={editedMeal?.goodPoints?.join('\n') || ''}
-                  onChangeText={(text) => updateEditedField('goodPoints', text.split('\n').map(s => s.trim()).filter(Boolean))}
+                  onChangeText={(text) => updateEditedField('goodPoints', text.split('\n'))}
                   placeholder="High protein\nRich in vitamins\nLow in sugar"
                   placeholderTextColor={colors.textMuted}
                   multiline
+                  numberOfLines={4}
                 />
               </View>
 
@@ -581,10 +587,11 @@ export default function MealDetailScreen() {
                 <TextInput
                   style={[styles.textInput, styles.textAreaInput, { backgroundColor: colors.glassBackgroundStrong, color: colors.text, borderColor: colors.glassBorder }]}
                   value={editedMeal?.badPoints?.join('\n') || ''}
-                  onChangeText={(text) => updateEditedField('badPoints', text.split('\n').map(s => s.trim()).filter(Boolean))}
+                  onChangeText={(text) => updateEditedField('badPoints', text.split('\n'))}
                   placeholder="High sodium\nHigh sugar\nProcessed ingredients"
                   placeholderTextColor={colors.textMuted}
                   multiline
+                  numberOfLines={4}
                 />
               </View>
             </ScrollView>
