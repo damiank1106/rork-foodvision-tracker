@@ -15,7 +15,7 @@ export const LightColors = {
   secondaryAccent: '#A7E1FF',
   accent: '#4DB8FF',
   
-  tabIconDefault: '#8A9AA9',
+  tabIconDefault: '#000000',
   tabIconSelected: '#4DB8FF',
   
   glassBorder: 'rgba(0, 0, 0, 0.1)', // Increased visibility (was 0.06)
