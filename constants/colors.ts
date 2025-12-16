@@ -50,7 +50,7 @@ export const DarkColors = {
   tabIconDefault: '#FFFFFF',
   tabIconSelected: '#4DB8FF',
   
-  glassBorder: 'rgba(255, 255, 255, 0.25)',
+  glassBorder: 'rgba(255, 255, 255, 0.08)',
   glassBackground: 'rgba(255, 255, 255, 0.12)',
   glassBackgroundStrong: 'rgba(30, 30, 30, 0.85)',
   modalOverlay: 'rgba(0, 0, 0, 0.75)',
