@@ -3,7 +3,8 @@ import { StyleSheet, Text, View, FlatList, TextInput, Platform, TouchableOpacity
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { useTheme } from '@/context/ThemeContext';
-import { Send, Bot, User as UserIcon, Archive, Trash2, Save } from 'lucide-react-native';
+import { Send, User as UserIcon, Archive, Trash2, Save } from 'lucide-react-native';
+import { AnimatedBotIcon } from '@/components/AnimatedBotIcon';
 import { sendCoachMessage, ChatMessage, saveConversation } from '@/services/coach';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp, FadeIn } from 'react-native-reanimated';
@@ -155,7 +156,7 @@ export default function CoachScreen() {
       >
         {!isUser && (
           <View style={styles.avatarContainer}>
-            <Bot size={16} color={colors.primary} />
+            <AnimatedBotIcon size={16} color={colors.primary} />
           </View>
         )}
         <View style={[
@@ -247,7 +248,7 @@ export default function CoachScreen() {
             ListEmptyComponent={
               <Animated.View entering={FadeInUp.delay(300).springify()} style={styles.emptyContainer}>
                 <View style={[styles.emptyIcon, { backgroundColor: 'rgba(77, 184, 255, 0.1)' }]}>
-                  <Bot size={48} color={colors.primary} />
+                  <AnimatedBotIcon size={48} color={colors.primary} />
                 </View>
                 <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                   Hi! I&apos;m your nutrition coach. Ask me about your recent meals or general nutrition questions.
@@ -258,7 +259,7 @@ export default function CoachScreen() {
               isLoading ? (
                 <Animated.View entering={FadeIn} style={styles.loadingContainer}>
                   <View style={styles.avatarContainer}>
-                    <Bot size={16} color={colors.primary} />
+                    <AnimatedBotIcon size={16} color={colors.primary} />
                   </View>
                   <View style={[styles.bubble, styles.aiBubble, styles.loadingBubble, { backgroundColor: colors.glassBackgroundStrong }]}>
                     <ActivityIndicator size="small" color={colors.primary} />
