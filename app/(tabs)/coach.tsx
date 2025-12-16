@@ -271,7 +271,7 @@ export default function CoachScreen() {
           <View
             style={[styles.inputWrapper, { 
               borderTopColor: colors.glassBorder,
-              paddingBottom: insets.bottom + (Platform.OS === 'android' ? 40 : 14) + extraPadding
+              paddingBottom: insets.bottom + (Platform.OS === 'android' ? 46 : 14) + extraPadding
             }]}
           >
             <BlurView intensity={30} tint={theme === 'dark' ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
