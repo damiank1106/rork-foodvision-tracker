@@ -1,4 +1,4 @@
-import { getStoredDeepSeekKey } from '@/hooks/useSettings';
+import { getStoredDeepSeekKey, getStoredDeepSeekModel } from '@/hooks/useSettings';
 import { SavedMeal } from '@/services/mealsDb';
 
 export async function askMealAI(meal: SavedMeal, userQuestion: string): Promise<string> {
@@ -33,6 +33,8 @@ Provide actionable, encouraging tips that stay within the meal context. Keep rep
     }
   ];
 
+  const model = await getStoredDeepSeekModel();
+
   const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
     headers: {
@@ -40,7 +42,7 @@ Provide actionable, encouraging tips that stay within the meal context. Keep rep
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'deepseek-chat',
+      model: model,
       messages,
       max_tokens: 300,
     }),

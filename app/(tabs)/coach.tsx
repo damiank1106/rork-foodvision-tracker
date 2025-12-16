@@ -233,7 +233,7 @@ export default function CoachScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoid}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
         >
           <FlatList
             ref={flatListRef}
@@ -271,7 +271,7 @@ export default function CoachScreen() {
           <View
             style={[styles.inputWrapper, { 
               borderTopColor: colors.glassBorder,
-              paddingBottom: insets.bottom + 14 + extraPadding
+              paddingBottom: insets.bottom + (Platform.OS === 'android' ? 24 : 14) + extraPadding
             }]}
           >
             <BlurView intensity={30} tint={theme === 'dark' ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />

@@ -1,4 +1,4 @@
-import { getStoredOpenAiKey } from '@/hooks/useSettings';
+import { getStoredOpenAiKey, getStoredOpenAiModel } from '@/hooks/useSettings';
 import * as FileSystem from 'expo-file-system/legacy';
 
 export interface MealAnalysisResult {
@@ -62,6 +62,7 @@ Please respond in JSON with this exact shape:
   "badPoints": string[]
 }`;
 
+    const model = await getStoredOpenAiModel();
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -69,7 +70,7 @@ Please respond in JSON with this exact shape:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: model,
         messages: [
           {
             role: 'system',

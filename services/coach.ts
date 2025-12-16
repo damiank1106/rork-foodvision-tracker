@@ -1,4 +1,4 @@
-import { getStoredDeepSeekKey } from '@/hooks/useSettings';
+import { getStoredDeepSeekKey, getStoredDeepSeekModel } from '@/hooks/useSettings';
 import { getAllMeals } from '@/services/mealsDb';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -61,6 +61,8 @@ ${mealsContext}`
       }
     ];
 
+    const model = await getStoredDeepSeekModel();
+    
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -69,7 +71,7 @@ ${mealsContext}`
         'Accept': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: model,
         messages: messages,
         max_tokens: 500,
       }),

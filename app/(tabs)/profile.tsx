@@ -35,7 +35,11 @@ export default function ProfileScreen() {
     apiKey, 
     deepSeekApiKey, 
     saveApiKey, 
-    saveDeepSeekApiKey, 
+    saveDeepSeekApiKey,
+    saveOpenAiModel,
+    saveDeepSeekModel,
+    openAiModel,
+    deepSeekModel,
     isLoading: isSettingsLoading 
   } = useSettings();
   const { colors, theme, toggleTheme } = useTheme();
@@ -435,6 +439,12 @@ export default function ProfileScreen() {
                 secureTextEntry={true} 
               />
 
+              <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 8 }]}>Model</Text>
+              <View style={styles.radioGroup}>
+                {renderRadio('GPT-4o Mini (Cheaper)', 'gpt-4o-mini', openAiModel, saveOpenAiModel)}
+                {renderRadio('GPT-4o (Smarter)', 'gpt-4o', openAiModel, saveOpenAiModel)}
+              </View>
+
               <GlassButton 
                 title={isKeySaved ? "Saved!" : "Save OpenAI Key"}
                 onPress={handleSaveKey}
@@ -464,6 +474,12 @@ export default function ProfileScreen() {
                 autoCapitalize="none"
                 secureTextEntry={true} 
               />
+
+              <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 8 }]}>Model</Text>
+              <View style={styles.radioGroup}>
+                {renderRadio('DeepSeek Chat (Cheaper)', 'deepseek-chat', deepSeekModel, saveDeepSeekModel)}
+                {renderRadio('DeepSeek Reasoner (Smarter)', 'deepseek-reasoner', deepSeekModel, saveDeepSeekModel)}
+              </View>
 
               <GlassButton 
                 title={isDeepSeekKeySaved ? "Saved!" : "Save DeepSeek Key"}
