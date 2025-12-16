@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle, Platform } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 
 interface GlassCardProps {
@@ -35,12 +35,17 @@ const styles = StyleSheet.create({
   wrapper: {
     borderRadius: 20,
     overflow: 'hidden',
-    borderWidth: 1.5, // Increased from 1 for better visibility
-    // Shadow for subtle glow
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: Platform.OS === 'android' ? 1 : 1.5,
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
   },
   content: {
     padding: 16,
