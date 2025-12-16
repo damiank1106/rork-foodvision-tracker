@@ -12,6 +12,7 @@ export const STORAGE_KEY_ANIMATED_BG_INTENSITY = 'foodvision_animated_bg_intensi
 export const STORAGE_KEY_ANIMATED_FOOD_ICONS_ENABLED = 'foodvision_animated_food_icons_enabled';
 export const STORAGE_KEY_ANIMATED_FOOD_ICONS_COLOR = 'foodvision_animated_food_icons_color';
 export const STORAGE_KEY_ANIMATED_FOOD_ICONS_INTENSITY = 'foodvision_animated_food_icons_intensity';
+export const STORAGE_KEY_GLASS_OPACITY = 'foodvision_glass_opacity';
 
 export type ThemeType = 'light' | 'dark';
 export type AnimatedBgIntensity = 'low' | 'medium' | 'high' | 'super-high';
@@ -64,6 +65,7 @@ export function useSettings() {
   const [animatedFoodIconsEnabled, setAnimatedFoodIconsEnabled] = useState<boolean>(false);
   const [animatedFoodIconsColor, setAnimatedFoodIconsColor] = useState<string>('#E74C3C');
   const [animatedFoodIconsIntensity, setAnimatedFoodIconsIntensity] = useState<AnimatedBgIntensity>('medium');
+  const [glassOpacity, setGlassOpacity] = useState<number>(0);
   
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +84,8 @@ export function useSettings() {
         storedAnimatedBgIntensity,
         storedAnimatedFoodIconsEnabled,
         storedAnimatedFoodIconsColor,
-        storedAnimatedFoodIconsIntensity
+        storedAnimatedFoodIconsIntensity,
+        storedGlassOpacity
       ] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEY_API_KEY),
         AsyncStorage.getItem(STORAGE_KEY_DEEPSEEK_API_KEY),
@@ -94,7 +97,8 @@ export function useSettings() {
         AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_INTENSITY),
         AsyncStorage.getItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_ENABLED),
         AsyncStorage.getItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_COLOR),
-        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_INTENSITY)
+        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_INTENSITY),
+        AsyncStorage.getItem(STORAGE_KEY_GLASS_OPACITY)
       ]);
 
       if (storedKey) setApiKey(storedKey);
@@ -110,6 +114,7 @@ export function useSettings() {
       if (storedAnimatedFoodIconsEnabled !== null) setAnimatedFoodIconsEnabled(storedAnimatedFoodIconsEnabled === 'true');
       if (storedAnimatedFoodIconsColor) setAnimatedFoodIconsColor(storedAnimatedFoodIconsColor);
       if (storedAnimatedFoodIconsIntensity) setAnimatedFoodIconsIntensity(storedAnimatedFoodIconsIntensity as AnimatedBgIntensity);
+      if (storedGlassOpacity !== null) setGlassOpacity(parseInt(storedGlassOpacity) || 0);
       
       setError(null);
     } catch (e) {
@@ -257,6 +262,17 @@ export function useSettings() {
     }
   }, []);
 
+  const saveGlassOpacity = useCallback(async (opacity: number) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_GLASS_OPACITY, opacity.toString());
+      setGlassOpacity(opacity);
+      return true;
+    } catch (e) {
+      console.error('Failed to save glass opacity', e);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
@@ -273,6 +289,7 @@ export function useSettings() {
     animatedFoodIconsEnabled,
     animatedFoodIconsColor,
     animatedFoodIconsIntensity,
+    glassOpacity,
     isLoading,
     error,
     saveApiKey,
@@ -286,6 +303,7 @@ export function useSettings() {
     saveAnimatedFoodIconsEnabled,
     saveAnimatedFoodIconsColor,
     saveAnimatedFoodIconsIntensity,
+    saveGlassOpacity,
     reload: loadSettings,
   };
 }

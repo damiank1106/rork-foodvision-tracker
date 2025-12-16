@@ -13,12 +13,14 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     animatedFoodIconsEnabled,
     animatedFoodIconsColor,
     animatedFoodIconsIntensity,
+    glassOpacity,
     saveAnimatedBgEnabled,
     saveAnimatedBgColor,
     saveAnimatedBgIntensity,
     saveAnimatedFoodIconsEnabled,
     saveAnimatedFoodIconsColor,
     saveAnimatedFoodIconsIntensity,
+    saveGlassOpacity,
     isLoading 
   } = useSettings();
 
@@ -43,11 +45,13 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     animatedFoodIconsEnabled,
     animatedFoodIconsColor,
     animatedFoodIconsIntensity,
+    glassOpacity,
     setAnimatedBgEnabled: saveAnimatedBgEnabled,
     setAnimatedBgColor: saveAnimatedBgColor,
     setAnimatedBgIntensity: saveAnimatedBgIntensity,
     setAnimatedFoodIconsEnabled: saveAnimatedFoodIconsEnabled,
     setAnimatedFoodIconsColor: saveAnimatedFoodIconsColor,
     setAnimatedFoodIconsIntensity: saveAnimatedFoodIconsIntensity,
+    setGlassOpacity: saveGlassOpacity,
   };
 });

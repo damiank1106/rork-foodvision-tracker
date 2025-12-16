@@ -4,7 +4,7 @@ import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { GlassButton } from '@/components/GlassButton';
 import { useTheme } from '@/context/ThemeContext';
-import { Key, ShieldCheck, Moon, Sun, Sparkles, Apple } from 'lucide-react-native';
+import { Key, ShieldCheck, Moon, Sun, Sparkles, Apple, Layers } from 'lucide-react-native';
 import { useSettings } from '@/hooks/useSettings';
 import { useProfile } from '@/context/ProfileContext';
 import * as Haptics from 'expo-haptics';
@@ -57,7 +57,9 @@ export default function ProfileScreen() {
     setAnimatedBgIntensity,
     setAnimatedFoodIconsEnabled,
     setAnimatedFoodIconsColor,
-    setAnimatedFoodIconsIntensity
+    setAnimatedFoodIconsIntensity,
+    glassOpacity,
+    setGlassOpacity
   } = useTheme();
   const { profile, updateProfile, recalculateTargets, isLoading: isProfileLoading } = useProfile();
 
@@ -223,187 +225,8 @@ export default function ProfileScreen() {
             <Text style={[styles.title, { color: colors.text }]}>Profile & Settings</Text>
           </Animated.View>
 
-          {/* Theme Section */}
-          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.section}>
-             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Appearance</Text>
-             <GlassCard style={styles.themeCard}>
-               <View style={styles.themeRow}>
-                 <View style={styles.themeInfo}>
-                    {theme === 'dark' ? <Moon size={24} color={colors.tint} /> : <Sun size={24} color={colors.tint} />}
-                    <Text style={[styles.themeText, { color: colors.text }]}>Dark Mode</Text>
-                 </View>
-                 <Switch 
-                   value={theme === 'dark'}
-                   onValueChange={handleToggleTheme}
-                   trackColor={{ false: '#767577', true: colors.tint }}
-                   thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
-                 />
-               </View>
-
-               <View style={[styles.divider, { backgroundColor: colors.glassBorder, marginVertical: 12 }]} />
-
-               <View style={styles.themeRow}>
-                 <View style={styles.themeInfo}>
-                    <Apple size={24} color={colors.tint} />
-                    <Text style={[styles.themeText, { color: colors.text }]}>Animated Food Icons</Text>
-                 </View>
-                 <Switch 
-                   value={animatedFoodIconsEnabled}
-                   onValueChange={(value) => {
-                     Haptics.selectionAsync();
-                     setAnimatedFoodIconsEnabled(value);
-                   }}
-                   trackColor={{ false: '#767577', true: colors.tint }}
-                   thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
-                 />
-               </View>
-
-               {animatedFoodIconsEnabled && (
-                 <>
-                   <View style={{ marginTop: 16 }}>
-                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Food Icons Color</Text>
-                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
-                       {[
-                         { color: '#E74C3C', name: 'Red' },
-                         { color: '#F39C12', name: 'Orange' },
-                         { color: '#F1C40F', name: 'Yellow' },
-                         { color: '#2ECC71', name: 'Green' },
-                         { color: '#3498DB', name: 'Blue' },
-                         { color: '#9B59B6', name: 'Purple' },
-                         { color: '#E91E63', name: 'Pink' },
-                         { color: '#FF6B6B', name: 'Coral' },
-                         { color: '#1ABC9C', name: 'Teal' },
-                       ].map((item) => (
-                         <TouchableOpacity
-                           key={item.color}
-                           onPress={() => {
-                             Haptics.selectionAsync();
-                             setAnimatedFoodIconsColor(item.color);
-                           }}
-                           style={[
-                             styles.colorOption,
-                             { backgroundColor: item.color },
-                             animatedFoodIconsColor === item.color && styles.colorOptionSelected,
-                           ]}
-                         >
-                           {animatedFoodIconsColor === item.color && (
-                             <View style={styles.colorCheckmark}>
-                               <Text style={styles.colorCheckmarkText}>✓</Text>
-                             </View>
-                           )}
-                         </TouchableOpacity>
-                       ))}
-                     </ScrollView>
-                   </View>
-
-                   <View style={{ marginTop: 16 }}>
-                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Food Icons Intensity</Text>
-                     <View style={styles.radioGroup}>
-                       {renderRadio('Low', 'low', animatedFoodIconsIntensity, (v) => {
-                         Haptics.selectionAsync();
-                         setAnimatedFoodIconsIntensity(v);
-                       })}
-                       {renderRadio('Medium', 'medium', animatedFoodIconsIntensity, (v) => {
-                         Haptics.selectionAsync();
-                         setAnimatedFoodIconsIntensity(v);
-                       })}
-                       {renderRadio('High', 'high', animatedFoodIconsIntensity, (v) => {
-                         Haptics.selectionAsync();
-                         setAnimatedFoodIconsIntensity(v);
-                       })}
-                       {renderRadio('Super High', 'super-high', animatedFoodIconsIntensity, (v) => {
-                         Haptics.selectionAsync();
-                         setAnimatedFoodIconsIntensity(v);
-                       })}
-                     </View>
-                   </View>
-                 </>
-               )}
-
-               <View style={[styles.divider, { backgroundColor: colors.glassBorder, marginVertical: 12 }]} />
-
-               <View style={styles.themeRow}>
-                 <View style={styles.themeInfo}>
-                    <Sparkles size={24} color={colors.tint} />
-                    <Text style={[styles.themeText, { color: colors.text }]}>Animated Background</Text>
-                 </View>
-                 <Switch 
-                   value={animatedBgEnabled}
-                   onValueChange={(value) => {
-                     Haptics.selectionAsync();
-                     setAnimatedBgEnabled(value);
-                   }}
-                   trackColor={{ false: '#767577', true: colors.tint }}
-                   thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
-                 />
-               </View>
-
-               {animatedBgEnabled && (
-                 <>
-                   <View style={{ marginTop: 16 }}>
-                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Background Color</Text>
-                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
-                       {[
-                         { color: '#4A90E2', name: 'Blue' },
-                         { color: '#9B59B6', name: 'Purple' },
-                         { color: '#E74C3C', name: 'Red' },
-                         { color: '#3498DB', name: 'Ocean' },
-                         { color: '#1ABC9C', name: 'Teal' },
-                         { color: '#F39C12', name: 'Orange' },
-                         { color: '#E91E63', name: 'Pink' },
-                         { color: '#00BCD4', name: 'Cyan' },
-                         { color: '#8BC34A', name: 'Green' },
-                       ].map((item) => (
-                         <TouchableOpacity
-                           key={item.color}
-                           onPress={() => {
-                             Haptics.selectionAsync();
-                             setAnimatedBgColor(item.color);
-                           }}
-                           style={[
-                             styles.colorOption,
-                             { backgroundColor: item.color },
-                             animatedBgColor === item.color && styles.colorOptionSelected,
-                           ]}
-                         >
-                           {animatedBgColor === item.color && (
-                             <View style={styles.colorCheckmark}>
-                               <Text style={styles.colorCheckmarkText}>✓</Text>
-                             </View>
-                           )}
-                         </TouchableOpacity>
-                       ))}
-                     </ScrollView>
-                   </View>
-
-                   <View style={{ marginTop: 16 }}>
-                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Intensity</Text>
-                     <View style={styles.radioGroup}>
-                       {renderRadio('Low', 'low', animatedBgIntensity, (v) => {
-                         Haptics.selectionAsync();
-                         setAnimatedBgIntensity(v);
-                       })}
-                       {renderRadio('Medium', 'medium', animatedBgIntensity, (v) => {
-                         Haptics.selectionAsync();
-                         setAnimatedBgIntensity(v);
-                       })}
-                       {renderRadio('High', 'high', animatedBgIntensity, (v) => {
-                         Haptics.selectionAsync();
-                         setAnimatedBgIntensity(v);
-                       })}
-                       {renderRadio('Super High', 'super-high', animatedBgIntensity, (v) => {
-                         Haptics.selectionAsync();
-                         setAnimatedBgIntensity(v);
-                       })}
-                     </View>
-                   </View>
-                 </>
-               )}
-             </GlassCard>
-          </Animated.View>
-
           {/* User Info & Goals Section */}
-          <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.section}>
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Health & Goals</Text>
             <GlassCard>
               <View style={styles.formGroup}>
@@ -590,6 +413,217 @@ export default function ProfileScreen() {
               />
 
             </GlassCard>
+          </Animated.View>
+
+          {/* Appearance Section */}
+          <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.section}>
+             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Appearance</Text>
+             <GlassCard style={styles.themeCard}>
+               <View style={styles.themeRow}>
+                 <View style={styles.themeInfo}>
+                    <Layers size={24} color={colors.tint} />
+                    <Text style={[styles.themeText, { color: colors.text }]}>Glass Containers Opacity</Text>
+                 </View>
+               </View>
+               <Text style={[styles.opacityLabel, { color: colors.textSecondary }]}>Level {glassOpacity} {glassOpacity === 0 ? '(Default)' : glassOpacity === 10 ? '(Max)' : ''}</Text>
+               <View style={styles.opacityButtons}>
+                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                   <TouchableOpacity
+                     key={level}
+                     onPress={() => {
+                       Haptics.selectionAsync();
+                       setGlassOpacity(level);
+                     }}
+                     style={[
+                       styles.opacityButton,
+                       { borderColor: colors.glassBorder, backgroundColor: 'rgba(255,255,255,0.05)' },
+                       glassOpacity === level && { backgroundColor: colors.tint, borderColor: colors.tint }
+                     ]}
+                   >
+                     <Text style={[
+                       styles.opacityButtonText,
+                       { color: colors.textSecondary },
+                       glassOpacity === level && { color: '#FFF', fontWeight: '600' }
+                     ]}>{level}</Text>
+                   </TouchableOpacity>
+                 ))}
+               </View>
+
+               <View style={[styles.divider, { backgroundColor: colors.glassBorder, marginVertical: 12 }]} />
+
+               <View style={styles.themeRow}>
+                 <View style={styles.themeInfo}>
+                    {theme === 'dark' ? <Moon size={24} color={colors.tint} /> : <Sun size={24} color={colors.tint} />}
+                    <Text style={[styles.themeText, { color: colors.text }]}>Dark Mode</Text>
+                 </View>
+                 <Switch 
+                   value={theme === 'dark'}
+                   onValueChange={handleToggleTheme}
+                   trackColor={{ false: '#767577', true: colors.tint }}
+                   thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
+                 />
+               </View>
+
+               <View style={[styles.divider, { backgroundColor: colors.glassBorder, marginVertical: 12 }]} />
+
+               <View style={styles.themeRow}>
+                 <View style={styles.themeInfo}>
+                    <Apple size={24} color={colors.tint} />
+                    <Text style={[styles.themeText, { color: colors.text }]}>Animated Food Icons</Text>
+                 </View>
+                 <Switch 
+                   value={animatedFoodIconsEnabled}
+                   onValueChange={(value) => {
+                     Haptics.selectionAsync();
+                     setAnimatedFoodIconsEnabled(value);
+                   }}
+                   trackColor={{ false: '#767577', true: colors.tint }}
+                   thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
+                 />
+               </View>
+
+               {animatedFoodIconsEnabled && (
+                 <>
+                   <View style={{ marginTop: 16 }}>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Food Icons Color</Text>
+                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
+                       {[
+                         { color: '#E74C3C', name: 'Red' },
+                         { color: '#F39C12', name: 'Orange' },
+                         { color: '#F1C40F', name: 'Yellow' },
+                         { color: '#2ECC71', name: 'Green' },
+                         { color: '#3498DB', name: 'Blue' },
+                         { color: '#9B59B6', name: 'Purple' },
+                         { color: '#E91E63', name: 'Pink' },
+                         { color: '#FF6B6B', name: 'Coral' },
+                         { color: '#1ABC9C', name: 'Teal' },
+                       ].map((item) => (
+                         <TouchableOpacity
+                           key={item.color}
+                           onPress={() => {
+                             Haptics.selectionAsync();
+                             setAnimatedFoodIconsColor(item.color);
+                           }}
+                           style={[
+                             styles.colorOption,
+                             { backgroundColor: item.color },
+                             animatedFoodIconsColor === item.color && styles.colorOptionSelected,
+                           ]}
+                         >
+                           {animatedFoodIconsColor === item.color && (
+                             <View style={styles.colorCheckmark}>
+                               <Text style={styles.colorCheckmarkText}>✓</Text>
+                             </View>
+                           )}
+                         </TouchableOpacity>
+                       ))}
+                     </ScrollView>
+                   </View>
+
+                   <View style={{ marginTop: 16 }}>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Food Icons Intensity</Text>
+                     <View style={styles.radioGroup}>
+                       {renderRadio('Low', 'low', animatedFoodIconsIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedFoodIconsIntensity(v);
+                       })}
+                       {renderRadio('Medium', 'medium', animatedFoodIconsIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedFoodIconsIntensity(v);
+                       })}
+                       {renderRadio('High', 'high', animatedFoodIconsIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedFoodIconsIntensity(v);
+                       })}
+                       {renderRadio('Super High', 'super-high', animatedFoodIconsIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedFoodIconsIntensity(v);
+                       })}
+                     </View>
+                   </View>
+                 </>
+               )}
+
+               <View style={[styles.divider, { backgroundColor: colors.glassBorder, marginVertical: 12 }]} />
+
+               <View style={styles.themeRow}>
+                 <View style={styles.themeInfo}>
+                    <Sparkles size={24} color={colors.tint} />
+                    <Text style={[styles.themeText, { color: colors.text }]}>Animated Background</Text>
+                 </View>
+                 <Switch 
+                   value={animatedBgEnabled}
+                   onValueChange={(value) => {
+                     Haptics.selectionAsync();
+                     setAnimatedBgEnabled(value);
+                   }}
+                   trackColor={{ false: '#767577', true: colors.tint }}
+                   thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
+                 />
+               </View>
+
+               {animatedBgEnabled && (
+                 <>
+                   <View style={{ marginTop: 16 }}>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Background Color</Text>
+                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
+                       {[
+                         { color: '#4A90E2', name: 'Blue' },
+                         { color: '#9B59B6', name: 'Purple' },
+                         { color: '#E74C3C', name: 'Red' },
+                         { color: '#3498DB', name: 'Ocean' },
+                         { color: '#1ABC9C', name: 'Teal' },
+                         { color: '#F39C12', name: 'Orange' },
+                         { color: '#E91E63', name: 'Pink' },
+                         { color: '#00BCD4', name: 'Cyan' },
+                         { color: '#8BC34A', name: 'Green' },
+                       ].map((item) => (
+                         <TouchableOpacity
+                           key={item.color}
+                           onPress={() => {
+                             Haptics.selectionAsync();
+                             setAnimatedBgColor(item.color);
+                           }}
+                           style={[
+                             styles.colorOption,
+                             { backgroundColor: item.color },
+                             animatedBgColor === item.color && styles.colorOptionSelected,
+                           ]}
+                         >
+                           {animatedBgColor === item.color && (
+                             <View style={styles.colorCheckmark}>
+                               <Text style={styles.colorCheckmarkText}>✓</Text>
+                             </View>
+                           )}
+                         </TouchableOpacity>
+                       ))}
+                     </ScrollView>
+                   </View>
+
+                   <View style={{ marginTop: 16 }}>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Intensity</Text>
+                     <View style={styles.radioGroup}>
+                       {renderRadio('Low', 'low', animatedBgIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedBgIntensity(v);
+                       })}
+                       {renderRadio('Medium', 'medium', animatedBgIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedBgIntensity(v);
+                       })}
+                       {renderRadio('High', 'high', animatedBgIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedBgIntensity(v);
+                       })}
+                       {renderRadio('Super High', 'super-high', animatedBgIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedBgIntensity(v);
+                       })}
+                     </View>
+                   </View>
+                 </>
+               )}
+             </GlassCard>
           </Animated.View>
 
           {/* AI Settings Section */}
@@ -860,5 +894,27 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  opacityLabel: {
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  opacityButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  opacityButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  opacityButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

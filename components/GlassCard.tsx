@@ -11,13 +11,19 @@ interface GlassCardProps {
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({ children, style, contentStyle, intensity = 25 }) => {
-  const { colors, theme } = useTheme();
+  const { colors, theme, glassOpacity } = useTheme();
+  
+  const opacityMultiplier = glassOpacity / 10;
+  const adjustedBackgroundOpacity = Math.min(1, (theme === 'dark' ? 0.15 : 0.2) + (opacityMultiplier * 0.85));
+  
+  const baseColor = theme === 'dark' ? '255, 255, 255' : '0, 0, 0';
+  const customBackgroundColor = `rgba(${baseColor}, ${adjustedBackgroundOpacity})`;
   
   return (
     <View style={[
       styles.wrapper, 
       { 
-        backgroundColor: colors.glassBackground,
+        backgroundColor: glassOpacity > 0 ? customBackgroundColor : colors.glassBackground,
         borderColor: colors.glassBorder,
         shadowColor: colors.primary,
       }, 
