@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   },
   mealCard: {
     marginBottom: 12,
-    padding: 12,
+    padding: 8,
     position: 'relative',
   },
   mealTouchable: {
@@ -474,9 +474,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   thumbnail: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 10,
   },
   mealInfo: {
     flex: 1,
