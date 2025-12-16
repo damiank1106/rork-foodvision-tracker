@@ -10,6 +10,8 @@ export const STORAGE_KEY_ANIMATED_BG_ENABLED = 'foodvision_animated_bg_enabled';
 export const STORAGE_KEY_ANIMATED_BG_COLOR = 'foodvision_animated_bg_color';
 export const STORAGE_KEY_ANIMATED_BG_INTENSITY = 'foodvision_animated_bg_intensity';
 export const STORAGE_KEY_ANIMATED_FOOD_ICONS_ENABLED = 'foodvision_animated_food_icons_enabled';
+export const STORAGE_KEY_ANIMATED_FOOD_ICONS_COLOR = 'foodvision_animated_food_icons_color';
+export const STORAGE_KEY_ANIMATED_FOOD_ICONS_INTENSITY = 'foodvision_animated_food_icons_intensity';
 
 export type ThemeType = 'light' | 'dark';
 export type AnimatedBgIntensity = 'low' | 'medium' | 'high' | 'super-high';
@@ -60,6 +62,8 @@ export function useSettings() {
   const [animatedBgColor, setAnimatedBgColor] = useState<string>('#4A90E2');
   const [animatedBgIntensity, setAnimatedBgIntensity] = useState<AnimatedBgIntensity>('medium');
   const [animatedFoodIconsEnabled, setAnimatedFoodIconsEnabled] = useState<boolean>(false);
+  const [animatedFoodIconsColor, setAnimatedFoodIconsColor] = useState<string>('#E74C3C');
+  const [animatedFoodIconsIntensity, setAnimatedFoodIconsIntensity] = useState<AnimatedBgIntensity>('medium');
   
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +80,9 @@ export function useSettings() {
         storedAnimatedBgEnabled,
         storedAnimatedBgColor,
         storedAnimatedBgIntensity,
-        storedAnimatedFoodIconsEnabled
+        storedAnimatedFoodIconsEnabled,
+        storedAnimatedFoodIconsColor,
+        storedAnimatedFoodIconsIntensity
       ] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEY_API_KEY),
         AsyncStorage.getItem(STORAGE_KEY_DEEPSEEK_API_KEY),
@@ -86,7 +92,9 @@ export function useSettings() {
         AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_ENABLED),
         AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_COLOR),
         AsyncStorage.getItem(STORAGE_KEY_ANIMATED_BG_INTENSITY),
-        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_ENABLED)
+        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_ENABLED),
+        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_COLOR),
+        AsyncStorage.getItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_INTENSITY)
       ]);
 
       if (storedKey) setApiKey(storedKey);
@@ -100,6 +108,8 @@ export function useSettings() {
       if (storedAnimatedBgColor) setAnimatedBgColor(storedAnimatedBgColor);
       if (storedAnimatedBgIntensity) setAnimatedBgIntensity(storedAnimatedBgIntensity as AnimatedBgIntensity);
       if (storedAnimatedFoodIconsEnabled !== null) setAnimatedFoodIconsEnabled(storedAnimatedFoodIconsEnabled === 'true');
+      if (storedAnimatedFoodIconsColor) setAnimatedFoodIconsColor(storedAnimatedFoodIconsColor);
+      if (storedAnimatedFoodIconsIntensity) setAnimatedFoodIconsIntensity(storedAnimatedFoodIconsIntensity as AnimatedBgIntensity);
       
       setError(null);
     } catch (e) {
@@ -225,6 +235,28 @@ export function useSettings() {
     }
   }, []);
 
+  const saveAnimatedFoodIconsColor = useCallback(async (color: string) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_COLOR, color);
+      setAnimatedFoodIconsColor(color);
+      return true;
+    } catch (e) {
+      console.error('Failed to save animated food icons color', e);
+      return false;
+    }
+  }, []);
+
+  const saveAnimatedFoodIconsIntensity = useCallback(async (intensity: AnimatedBgIntensity) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY_ANIMATED_FOOD_ICONS_INTENSITY, intensity);
+      setAnimatedFoodIconsIntensity(intensity);
+      return true;
+    } catch (e) {
+      console.error('Failed to save animated food icons intensity', e);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
@@ -239,6 +271,8 @@ export function useSettings() {
     animatedBgColor,
     animatedBgIntensity,
     animatedFoodIconsEnabled,
+    animatedFoodIconsColor,
+    animatedFoodIconsIntensity,
     isLoading,
     error,
     saveApiKey,
@@ -250,6 +284,8 @@ export function useSettings() {
     saveAnimatedBgColor,
     saveAnimatedBgIntensity,
     saveAnimatedFoodIconsEnabled,
+    saveAnimatedFoodIconsColor,
+    saveAnimatedFoodIconsIntensity,
     reload: loadSettings,
   };
 }

@@ -236,7 +236,7 @@ const foodIcons = [
   { Icon: Cake, size: 46 },
 ];
 
-const AnimatedFoodIcons: React.FC<{ color: string }> = ({ color }) => {
+const AnimatedFoodIcons: React.FC<{ color: string; intensity: AnimatedBgIntensity }> = ({ color, intensity }) => {
   const positions = useRef(
     foodIcons.map(() => ({
       translateX: new Animated.Value(0),
@@ -356,7 +356,7 @@ const AnimatedFoodIcons: React.FC<{ color: string }> = ({ color }) => {
               },
             ]}
           >
-            <Icon size={size} color={color} strokeWidth={1.5} style={{ opacity: 0.15 }} />
+            <Icon size={size} color={color} strokeWidth={1.5} style={{ opacity: 0.25 * intensityToScale[intensity] }} />
           </Animated.View>
         );
       })}
@@ -365,7 +365,7 @@ const AnimatedFoodIcons: React.FC<{ color: string }> = ({ color }) => {
 };
 
 export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children, style, contentContainerStyle, edges }) => {
-  const { colors, animatedBgEnabled, animatedBgColor, animatedBgIntensity, animatedFoodIconsEnabled } = useTheme();
+  const { colors, animatedBgEnabled, animatedBgColor, animatedBgIntensity, animatedFoodIconsEnabled, animatedFoodIconsColor, animatedFoodIconsIntensity } = useTheme();
 
   return (
     <LinearGradient
@@ -376,7 +376,7 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children, style, c
         <AnimatedBackground color={animatedBgColor} intensity={animatedBgIntensity} />
       )}
       {animatedFoodIconsEnabled && (
-        <AnimatedFoodIcons color={animatedBgColor} />
+        <AnimatedFoodIcons color={animatedFoodIconsColor} intensity={animatedFoodIconsIntensity} />
       )}
       <SafeAreaView
         style={[styles.container, style]}

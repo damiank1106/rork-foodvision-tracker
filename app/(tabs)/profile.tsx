@@ -50,10 +50,14 @@ export default function ProfileScreen() {
     animatedBgColor,
     animatedBgIntensity,
     animatedFoodIconsEnabled,
+    animatedFoodIconsColor,
+    animatedFoodIconsIntensity,
     setAnimatedBgEnabled,
     setAnimatedBgColor,
     setAnimatedBgIntensity,
-    setAnimatedFoodIconsEnabled
+    setAnimatedFoodIconsEnabled,
+    setAnimatedFoodIconsColor,
+    setAnimatedFoodIconsIntensity
   } = useTheme();
   const { profile, updateProfile, recalculateTargets, isLoading: isProfileLoading } = useProfile();
 
@@ -253,6 +257,68 @@ export default function ProfileScreen() {
                    thumbColor={Platform.OS === 'android' ? '#f4f3f4' : ''}
                  />
                </View>
+
+               {animatedFoodIconsEnabled && (
+                 <>
+                   <View style={{ marginTop: 16 }}>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Food Icons Color</Text>
+                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
+                       {[
+                         { color: '#E74C3C', name: 'Red' },
+                         { color: '#F39C12', name: 'Orange' },
+                         { color: '#F1C40F', name: 'Yellow' },
+                         { color: '#2ECC71', name: 'Green' },
+                         { color: '#3498DB', name: 'Blue' },
+                         { color: '#9B59B6', name: 'Purple' },
+                         { color: '#E91E63', name: 'Pink' },
+                         { color: '#FF6B6B', name: 'Coral' },
+                         { color: '#1ABC9C', name: 'Teal' },
+                       ].map((item) => (
+                         <TouchableOpacity
+                           key={item.color}
+                           onPress={() => {
+                             Haptics.selectionAsync();
+                             setAnimatedFoodIconsColor(item.color);
+                           }}
+                           style={[
+                             styles.colorOption,
+                             { backgroundColor: item.color },
+                             animatedFoodIconsColor === item.color && styles.colorOptionSelected,
+                           ]}
+                         >
+                           {animatedFoodIconsColor === item.color && (
+                             <View style={styles.colorCheckmark}>
+                               <Text style={styles.colorCheckmarkText}>✓</Text>
+                             </View>
+                           )}
+                         </TouchableOpacity>
+                       ))}
+                     </ScrollView>
+                   </View>
+
+                   <View style={{ marginTop: 16 }}>
+                     <Text style={[styles.label, { color: colors.textSecondary, marginBottom: 12 }]}>Food Icons Intensity</Text>
+                     <View style={styles.radioGroup}>
+                       {renderRadio('Low', 'low', animatedFoodIconsIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedFoodIconsIntensity(v);
+                       })}
+                       {renderRadio('Medium', 'medium', animatedFoodIconsIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedFoodIconsIntensity(v);
+                       })}
+                       {renderRadio('High', 'high', animatedFoodIconsIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedFoodIconsIntensity(v);
+                       })}
+                       {renderRadio('Super High', 'super-high', animatedFoodIconsIntensity, (v) => {
+                         Haptics.selectionAsync();
+                         setAnimatedFoodIconsIntensity(v);
+                       })}
+                     </View>
+                   </View>
+                 </>
+               )}
 
                <View style={[styles.divider, { backgroundColor: colors.glassBorder, marginVertical: 12 }]} />
 
