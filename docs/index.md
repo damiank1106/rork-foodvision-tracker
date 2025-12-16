@@ -4,10 +4,10 @@ title: Privacy Policy
 
 # Privacy Policy — FoodVision Tracker
 
-**Effective date:** [YYYY-MM-DD]  
+**Effective date:** 2025-12-16  
 **App name:** FoodVision Tracker  
-**Developer:** [Your name / Developer name shown on Google Play]  
-**Contact:** [your support email]
+**Developer:** DK  
+**Contact:** tdcompanionsupport@icloud.com
 
 This Privacy Policy explains how FoodVision Tracker (“the App”) accesses, uses, and shares data. This policy is provided for transparency and to comply with Google Play requirements.
 
@@ -113,4 +113,4 @@ We may update this policy from time to time. Changes will be posted on this page
 
 ## 10. Contact
 If you have questions or requests about privacy, contact:  
-**Email:** [your support email]
+**Email:** tdcompanionsupport@icloud.com
