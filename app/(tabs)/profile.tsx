@@ -425,26 +425,28 @@ export default function ProfileScreen() {
                     <Text style={[styles.themeText, { color: colors.text }]}>Glass Containers Opacity</Text>
                  </View>
                </View>
-               <Text style={[styles.opacityLabel, { color: colors.textSecondary }]}>Level {glassOpacity} {glassOpacity === 0 ? '(Default)' : glassOpacity === 10 ? '(Max)' : ''}</Text>
                <View style={styles.opacityButtons}>
-                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                 {[
+                   { level: 0, label: 'OFF' },
+                   { level: 1, label: 'ON' }
+                 ].map((item) => (
                    <TouchableOpacity
-                     key={level}
+                     key={item.level}
                      onPress={() => {
                        Haptics.selectionAsync();
-                       setGlassOpacity(level);
+                       setGlassOpacity(item.level);
                      }}
                      style={[
                        styles.opacityButton,
                        { borderColor: colors.glassBorder, backgroundColor: 'rgba(255,255,255,0.05)' },
-                       glassOpacity === level && { backgroundColor: colors.tint, borderColor: colors.tint }
+                       glassOpacity === item.level && { backgroundColor: colors.tint, borderColor: colors.tint }
                      ]}
                    >
                      <Text style={[
                        styles.opacityButtonText,
                        { color: colors.textSecondary },
-                       glassOpacity === level && { color: '#FFF', fontWeight: '600' }
-                     ]}>{level}</Text>
+                       glassOpacity === item.level && { color: '#FFF', fontWeight: '600' }
+                     ]}>{item.label}</Text>
                    </TouchableOpacity>
                  ))}
                </View>
@@ -895,19 +897,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  opacityLabel: {
-    fontSize: 14,
-    marginTop: 8,
-    marginBottom: 12,
-  },
+
   opacityButtons: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   opacityButton: {
-    width: 50,
-    height: 50,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
     borderRadius: 25,
     borderWidth: 2,
     justifyContent: 'center',
