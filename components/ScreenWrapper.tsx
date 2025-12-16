@@ -4,7 +4,7 @@ import { StyleSheet, ViewStyle, Animated } from 'react-native';
 import { Edge, SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { AnimatedBgIntensity } from '@/hooks/useSettings';
-import { Pizza, Coffee, Apple, Croissant, Cherry, IceCream, Candy, Cookie, Cake } from 'lucide-react-native';
+import { Pizza, Coffee, Apple, Croissant, Cherry, IceCream, Candy, Cookie, Cake, Beer, Wine, Sandwich, Egg, Fish, Beef, Grape, Banana, Salad, Soup } from 'lucide-react-native';
 
 interface ScreenWrapperProps {
   children: React.ReactNode;
@@ -234,6 +234,16 @@ const foodIcons = [
   { Icon: Candy, size: 40 },
   { Icon: Cookie, size: 42 },
   { Icon: Cake, size: 46 },
+  { Icon: Beer, size: 44 },
+  { Icon: Wine, size: 42 },
+  { Icon: Sandwich, size: 48 },
+  { Icon: Egg, size: 38 },
+  { Icon: Fish, size: 46 },
+  { Icon: Beef, size: 44 },
+  { Icon: Grape, size: 40 },
+  { Icon: Banana, size: 42 },
+  { Icon: Salad, size: 46 },
+  { Icon: Soup, size: 44 },
 ];
 
 const AnimatedFoodIcons: React.FC<{ color: string; intensity: AnimatedBgIntensity }> = ({ color, intensity }) => {
@@ -329,6 +339,16 @@ const AnimatedFoodIcons: React.FC<{ color: string; intensity: AnimatedBgIntensit
     { top: '70%', left: '8%' },
     { top: '78%', right: '12%' },
     { bottom: '12%', left: '15%' },
+    { top: '12%', left: '45%' },
+    { top: '20%', right: '35%' },
+    { top: '42%', left: '35%' },
+    { top: '55%', right: '30%' },
+    { top: '68%', left: '42%' },
+    { top: '82%', right: '35%' },
+    { bottom: '8%', left: '50%' },
+    { top: '30%', left: '75%' },
+    { top: '45%', right: '75%' },
+    { top: '65%', left: '70%' },
   ];
 
   return (
