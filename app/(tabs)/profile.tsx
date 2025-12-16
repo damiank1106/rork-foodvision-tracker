@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, Switch, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, Switch, Dimensions, Linking } from 'react-native';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { GlassCard } from '@/components/GlassCard';
 import { GlassButton } from '@/components/GlassButton';
 import { useTheme } from '@/context/ThemeContext';
-import { Key, ShieldCheck, Moon, Sun, Sparkles, Apple, Layers } from 'lucide-react-native';
+import { Key, ShieldCheck, Moon, Sun, Sparkles, Apple, Layers, ExternalLink } from 'lucide-react-native';
 import { useSettings } from '@/hooks/useSettings';
 import { useProfile } from '@/context/ProfileContext';
 import * as Haptics from 'expo-haptics';
@@ -225,6 +225,21 @@ export default function ProfileScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <Animated.View entering={FadeInDown.delay(100).springify()}>
             <Text style={[styles.title, { color: colors.text }]}>Profile & Settings</Text>
+          </Animated.View>
+
+          {/* Privacy Policy Button */}
+          <Animated.View entering={FadeInDown.delay(150).springify()} style={styles.privacySection}>
+            <TouchableOpacity
+              style={[styles.privacyButton, { backgroundColor: colors.glassBackground, borderColor: colors.glassBorder }]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                Linking.openURL('https://damiank1106.github.io/rork-foodvision-tracker/');
+              }}
+            >
+              <ShieldCheck size={20} color={colors.tint} />
+              <Text style={[styles.privacyButtonText, { color: colors.text }]}>Privacy Policy</Text>
+              <ExternalLink size={16} color={colors.textSecondary} />
+            </TouchableOpacity>
           </Animated.View>
 
           {/* User Info & Goals Section */}
@@ -917,5 +932,24 @@ const styles = StyleSheet.create({
   opacityButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  privacySection: {
+    marginBottom: 24,
+  },
+  privacyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 8,
+  },
+  privacyButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+    textAlign: 'center',
   },
 });
