@@ -348,6 +348,7 @@ const AnimatedFoodIcons: React.FC<{ color: string; intensity: AnimatedBgIntensit
               styles.foodIcon,
               position,
               {
+                opacity: 0.35 * intensityToScale[intensity],
                 transform: [
                   { translateX: pos.translateX },
                   { translateY: pos.translateY },
@@ -356,7 +357,7 @@ const AnimatedFoodIcons: React.FC<{ color: string; intensity: AnimatedBgIntensit
               },
             ]}
           >
-            <Icon size={size} color={color} strokeWidth={1.5} style={{ opacity: 0.25 * intensityToScale[intensity] }} />
+            <Icon size={size} color={color} strokeWidth={1.5} />
           </Animated.View>
         );
       })}
